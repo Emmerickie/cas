@@ -83,6 +83,7 @@ class Teaching(models.Model):
 
 
 class Programme(models.Model):
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, blank=True, null=True)
     programme_id = models.CharField(max_length=15, unique=True)
     name = models.CharField(max_length=250)
     date_added = models.DateTimeField(default=timezone.now)
@@ -90,7 +91,7 @@ class Programme(models.Model):
     
     
     def __str__(self):
-        return "[" + self.code + "] "+ self.code+ '-' +self.name
+        return self.programme_id
 
 
 class StudentProfile(models.Model):
@@ -109,7 +110,7 @@ class StudentProfile(models.Model):
     programme = models.ForeignKey(Programme, to_field='programme_id', on_delete=models.CASCADE, default='TBD')
     
     def __str__(self):
-        return self.student_id + " - " + self.last_name+ ", " + self.first_name+ " - " + self.middle_name
+        return self.student_id + "; " + self.last_name+ ", " + self.first_name+ " - " + self.middle_name
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

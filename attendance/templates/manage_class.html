@@ -1,38 +1,66 @@
 <div class="container-fluid">
-    <form action=" " id="class-form">
+    <form method="POST">
         {% csrf_token %}
-        <input type="hidden" name="id" value="{{ class.id }}">
+        {% for field in Save_programme_form %}
+            <p>
+                {{field.label_tag}}
+                {{field}}
+    
+                {% if field.help_text %}
+                    <small style="color:grey;">{{field.help_text}}</small>
+                {% endif %}
+    
+                {% for error in fields.errors %}
+                    <p style="color: red;">{{error}}</p>
+    
+                {% endfor %}
+    
+                {% if Save_programme_form.non_field_errors %}
+                    <div style= "color:red;">
+                        <p>{{Save_programme_form.non_field_errors}}</p>
+                    </div>
+                {% endif %}
+            </p>
+    
+    
+        {% endfor %}
+        
+        <button type="submit">Done</button>
+    </form>
+</div>
+    <!-- <form action=" " id="class-form">
+        {% csrf_token %}
+        <input type="hidden" name="id" value="{{ programme.id }}">
         <div class="form-group mb-3">
-            <label for="assigned_faculty" class="control-label">Department</label>
+            <label for="department" class="control-label">Department</label>
             <select name="department" id="assigned_departmenty" class="form-select rounded-0 select2" required>
-                {% if not class.assigned_faculty %}
+                {% if not programme.department %}
                 <option value="" selected></option>
                 {% else %}
                 <option value=""></option>
                 {% endif %}
-                {% for faculty in faculties %}
-                {% if class.assigned_faculty == faculty %}
-                <option value="{{ faculty.id }}" selected>{{ faculty.user.first_name }} {{ faculty.user.last_name }}</option>
+                {% for department in departments %}
+                {% if programme.department == department %}
+                <option value="{{ department.id }}" selected>{{ department.department_id }}</option>
                 {% else %}
-                <option value="{{ faculty.id }}">{{ faculty.user.first_name }} {{ faculty.user.last_name }}</option>
+                <option value="{{ department.id }}">{{ department.department_id }}</option>
                 {% endif %}
                 {% endfor %}
             </select>
         </div>
         <div class="form-group mb-3 ">
-            <label for="school_year" class="control-label">School Year</label>
-            <input type="text" class="form-control rounded-0" id="school_year" name="school_year" value="{{ class.school_year }}" required>
+            <label for="programme_code" class="control-label">Programme Code</label>
+            <input type="text" class="form-control rounded-0" id="programme_code" name="school_year" value="{{ programme.programme_id }}" required>
         </div>
         <div class="form-group mb-3 ">
-            <label for="level" class="control-label">Level</label>
-            <input type="text" class="form-control rounded-0" id="level" name="level" value="{{ class.level }}" required>
-        </div>
-        <div class="form-group mb-3 ">
-            <label for="name" class="control-label">Class Name</label>
-            <input type="text" class="form-control rounded-0" id="name" name="name" value="{{ class.name }}" required>
+            <label for="name" class="control-label">Programme Name</label>
+            <input type="text" class="form-control rounded-0" id="name" name="name" value="{{ programme.name }}" required>
         </div>
     </form>
-</div>
+</div> -->
+
+
+<!-- 
 <script>
     $(function() {
         $('#uni_modal').on('shown.bs.modal', function() {
@@ -87,4 +115,4 @@
             })
         })
     })
-</script>
+</script> -->

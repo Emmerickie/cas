@@ -14,7 +14,7 @@ from django.db.models import Q
 from ams.settings import MEDIA_ROOT, MEDIA_URL
 from attendance.models import Attendance, UserProfile,Course, Department, StudentProfile, Course, Enrollment, Teaching, Programme
 
-from attendance.forms import UserRegistration, StudentRegistration, UpdateProfile, UpdateProfileMeta, UpdateProfileAvatar, AddAvatar, SaveDepartment, SaveCourse, SaveClass, SaveStudent, SaveClassStudent, UpdatePasswords, UpdateFaculty
+from attendance.forms import UserRegistration, StudentRegistration, UpdateProfile, UpdateProfileMeta, UpdateProfileAvatar, AddAvatar, SaveDepartment, SaveCourse, SaveProgramme, SaveStudent, SaveClassStudent, UpdatePasswords, UpdateFaculty
 
 deparment_list = Department.objects.exclude(status = 2).all()
 context = {
@@ -428,26 +428,26 @@ def delete_faculty(request):
 @login_required
 def classPage(request):
     if request.user.profile.user_type == 1:
-        classes = Programme.objects.all()
+        programmes = Programme.objects.all()
     else:
-        classes = Programme.objects.filter(assigned_faculty = request.user.profile).all()
+        programmes = Programme.objects.filter(assigned_faculty = request.user.profile).all()
 
-    context['page_title'] = "Class Management"
-    context['classes'] = classes
+    context['page_title'] = "Programme Management"
+    context['programmes'] = programmes
     return render(request, 'class_mgt.html',context)
 
 @login_required
 def manage_class(request,pk=None):
-    faculty = UserProfile.objects.filter(user_type= 2).all()
+    departments =Department.objects.all()
     if pk == None:
-        _class = {}
+        programme = {}
     elif pk > 0:
-        _class = Class.objects.filter(id=pk).first()
+        programme = Programme.objects.filter(id=pk).first()
     else:
-        _class = {}
-    context['page_title'] = "Manage Class"
-    context['faculties'] = faculty
-    context['class'] = _class
+        programme = {}
+    context['page_title'] = "Manage Programme"
+    context['departments'] = departments
+    context['programme'] = programme
 
     return render(request, 'manage_class.html',context)
 
@@ -456,38 +456,29 @@ def view_class(request, pk= None):
     if pk is None:
         return redirect('home-page')
     else:
-        _class = Class.objects.filter(id=pk).first()
-        students = ClassStudent.objects.filter(classIns = _class).all()
-        context['class'] = _class
+        programme = Programme.objects.filter(id=pk).first()
+        students = StudentProfile.objects.filter(programme = programme).all()
+        context['programme'] = programme
         context['students'] = students
-        context['page_title'] = "Class Information"
+        context['page_title'] = "Programme Information"
     return render(request, 'class_details.html',context)
 
 
 @login_required
 def save_class(request):
     resp = { 'status':'failed' , 'msg' : '' }
-    if request.method == 'POST':
-        _class = None
-        print(not request.POST['id'] == '')
-        if not request.POST['id'] == '':
-            _class = Class.objects.filter(id=request.POST['id']).first()
-        if not _class == None:
-            form = SaveClass(request.POST,instance = _class)
-        else:
-            form = SaveClass(request.POST)
-    if form.is_valid():
-        form.save()
-        resp['status'] = 'success'
-        messages.success(request, 'Class has been saved successfully')
+    context = {}
+    if request.POST:
+        form = SaveProgramme(request.POST)
+        if  form.is_valid:
+            form.save()
+            return redirect('class-page')
+            
     else:
-        for field in form:
-            for error in field.errors:
-                resp['msg'] += str(error + '<br>')
-        if not _class == None:
-            form = SaveClass(instance = _class)
+        form = SaveProgramme()
+        context['Save_programme_form'] = form
 
-    return HttpResponse(json.dumps(resp),content_type="application/json")
+    return render(request, 'manage_class.html', context)
 
 @login_required
 def delete_class(request):

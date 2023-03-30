@@ -3,10 +3,10 @@
     <div class="card card-default rounded-0 shadow ">
         <div class="card-header">
             <div class="d-flex w-100 align-items-center justify-content-between">
-                <h4 class="card-title fw-bold">Class Management</h4>
+                <h4 class="card-title fw-bold">Programme Management</h4>
                 <div class="tools">
                     {% if user.profile.user_type == 1 %}
-                    <button type="button" class="btn btn-primary rounded-0 bg-gradient btn-sm" id='add_new'><i class="fa fa-plus"></i> Add New</button>
+                    <button type="button" class="btn btn-primary rounded-0 bg-gradient btn-sm" id='add_new'><i class="fa fa-plus"></i><a href="{% url 'save-class' %}"> Add New</a></button>
                     {% endif  %}
                 </div>
             </div>
@@ -25,30 +25,28 @@
                     <thead>
                         <tr class="bg-gradient bg-primary bg-opacity-50 text-light">
                             <th class="px-2 py-2 text-center">#</th>
-                            <th class="px-2 py-2 text-center">Faculty</th>
-                            <th class="px-2 py-2 text-center">Scool Year</th>
-                            <th class="px-2 py-2 text-center">Level</th>
+                            <th class="px-2 py-2 text-center">Department</th>
+                            <th class="px-2 py-2 text-center">Programme code</th>
                             <th class="px-2 py-2 text-center">Name</th>
                             <th class="px-2 py-2 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for class in classes %}
+                        {% for programme in programmes %}
                         <tr>
-                            <td class="px-2 py-1 align-middle">{{ class.id }}</td>
-                            <td class="px-2 py-1 align-middle">{{ class.assigned_faculty.user.first_name }} {{ class.assigned_faculty.user.last_name }}</td>
-                            <td class="px-2 py-1 align-middle">{{ class.school_year }}</td>
-                            <td class="px-2 py-1 align-middle">{{ class.level }}</td>
-                            <td class="px-2 py-1 align-middle">{{ class.name }}</td>
+                            <td class="px-2 py-1 align-middle">{{ programme.id }}</td>
+                            <td class="px-2 py-1 align-middle">{{ programme.department }}</td>
+                            <td class="px-2 py-1 align-middle">{{ programme.programme_id }}</td>
+                            <td class="px-2 py-1 align-middle">{{ programme.name }}</td>
                             <td class="px-2 py-1 align-middle text-center">
-                                <a class="btn btn-outline-info btn-sm" href="{% url 'class-page' class.pk %}" title="View">
+                                <a class="btn btn-outline-info btn-sm" href="{% url 'class-page' programme.pk %}" title="View">
                                     <i class="fa fa-eye"></i>
                                 </a>
                                 {% if user.profile.user_type == 1 %}
-                                <a class="btn btn-outline-primary btn-sm edit-data" href="javascript:void(0)" data-id="{{ class.pk }}" title="Edit">
+                                <a class="btn btn-outline-primary btn-sm edit-data" href="javascript:void(0)" data-id="{{ programme.pk }}" title="Edit">
                                     <i class="fa fa-edit"></i>
                                 </a>
-                                <button class="btn btn-outline-danger btn-sm delete-data" type="button" data-id="{{ class.pk }}" title="Delete">
+                                <button class="btn btn-outline-danger btn-sm delete-data" type="button" data-id="{{ programme.pk }}" title="Delete">
                                     <i class="fa fa-trash"></i>
                                 </button>
                                 {% endif  %}

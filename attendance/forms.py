@@ -6,7 +6,7 @@ from django.db.models import fields
 from django.contrib.auth.forms import UserCreationForm,PasswordChangeForm, UserChangeForm
 
 from django.contrib.auth.models import User
-from attendance.models import Enrollment, UserProfile, Department, Course, StudentProfile
+from attendance.models import Enrollment, UserProfile, Department, Course, StudentProfile, Programme
 
 class UserRegistration(UserCreationForm):
     email = forms.EmailField(max_length=250,help_text="The email field is required.")
@@ -202,23 +202,23 @@ class SaveCourse(forms.ModelForm):
     #         return self.cleaned_data['name']
     #     raise forms.ValidationError(f'{course.name} course Already Exists.')
 
-class SaveClass(forms.ModelForm):
-    assigned_faculty = forms.IntegerField()
-    school_year = forms.CharField(max_length=250,help_text = "School Year Field is required.")
-    level = forms.CharField(max_length=250,help_text = "Level Field is required.")
-    name = forms.CharField(max_length=250,help_text = "Class Name Field is required.")
+class SaveProgramme(forms.ModelForm):
+    department = forms.ModelChoiceField(queryset=Department.objects.all())
+    # school_year = forms.CharField(max_length=250,help_text = "School Year Field is required.")
+    # level = forms.CharField(max_length=250,help_text = "Level Field is required.")
+    # name = forms.CharField(max_length=250,help_text = "Class Name Field is required.")
 
     class Meta:
-        model= Course
-        fields = ('assigned_faculty', 'school_year','level','name')
+        model= Programme
+        fields = ('department', 'programme_id', 'name')
 
-    def clean_assigned_faculty(self):
-        assigned_faculty = self.cleaned_data['assigned_faculty']
-        try:
-            dept = UserProfile.objects.get(id = assigned_faculty)
-            return dept
-        except:
-            raise forms.ValidationError(f'Assigned Faculty value is invalid.')
+    # def clean_assigned_faculty(self):
+    #     assigned_faculty = self.cleaned_data['assigned_faculty']
+    #     try:
+    #         dept = UserProfile.objects.get(id = assigned_faculty)
+    #         return dept
+    #     except:
+    #         raise forms.ValidationError(f'Assigned Faculty value is invalid.')
 
 class SaveStudent(forms.ModelForm):
     course = forms.IntegerField()
