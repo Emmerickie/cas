@@ -10,6 +10,7 @@ urlpatterns = [
     path('login',auth_views.LoginView.as_view(template_name="login.html",redirect_authenticated_user = True),name='login'),
     path('userlogin', views.login_user, name="login-user"),
     path('user-register', views.registerUser, name="register-user"),
+    path('student-register', views.registerStudent, name="register-student"),
     path('logout',views.logoutuser,name='logout'),
     path('profile',views.profile,name='profile'),
     path('update-profile',views.update_profile,name='update-profile'),

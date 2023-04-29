@@ -8,13 +8,13 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 import json
 from datetime import datetime
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q
 from ams.settings import MEDIA_ROOT, MEDIA_URL
-from attendance.models import Attendance, UserProfile,Course, Department, StudentProfile, Course, Enrollment, Teaching, Programme
+from attendance.models import Attendance, UserProfile,Course, Department, StudentProfile, Course, Enrollment, Teaching, Programme, User
 
-from attendance.forms import UserRegistration, StudentRegistration, UpdateProfile, UpdateProfileMeta, UpdateProfileAvatar, AddAvatar, SaveDepartment, SaveCourse, SaveProgramme, SaveStudent, SaveClassStudent, UpdatePasswords, UpdateFaculty
+from attendance.forms import UserRegistration, StudentRegistration, UpdateProfile, UpdateProfileMeta, UpdateProfileAvatar, AddAvatar, SaveDepartment, SaveCourse, SaveProgramme, SaveStudent, SaveClassStudent, UpdatePasswords, UpdateFaculty, StudentProfileForm
 
 deparment_list = Department.objects.exclude(status = 2).all()
 context = {
@@ -78,69 +78,97 @@ def home(request):
 
 
 def registerUser(request):
+    department = Department.objects.filter(status=1).all()
+
     user = request.user
     if user.is_authenticated:
         return redirect('home-page')
-    context['page_title'] = "Register User"
+    context['page_title'] = "Register Instructor"
     if request.method == 'POST':
         data = request.POST
         form = UserRegistration(data)
         if form.is_valid():
             User.is_staff=True
-            form.save()
+            user = form.save(commit=False)
+            user.set_password((form.cleaned_data['last_name']).upper())
+            user.save()
+            
             newUser = User.objects.all().last()
             try:
                 profile = UserProfile.objects.get(user = newUser)
             except:
                 profile = None
-            if profile is None:
-                UserProfile(user = newUser, dob= data['dob'], contact= data['contact'], address= data['address'], avatar = request.FILES['avatar']).save()
-            else:
-                UserProfile.objects.filter(id = profile.id).update(user = newUser, dob= data['dob'], contact= data['contact'], address= data['address'])
-                avatar = AddAvatar(request.POST,request.FILES, instance = profile)
-                if avatar.is_valid():
-                    avatar.save()
-            username = form.cleaned_data.get('username')
-            pwd = form.cleaned_data.get('password1')
-            loginUser = authenticate(username= username, password = pwd)
-            login(request, loginUser)
+
+            UserProfile.objects.create(user=user, gender=user.gender, department=user.department)
+
+            # if profile is None:
+            #     if User.is_admin:
+            #         UserProfile(user = newUser, contact= data['contact'], avatar = request.FILES['avatar'], user_type=1).save()
+                
+            #     else:
+            #         UserProfile(user = newUser, contact= data['contact']).save()
+            # else:
+            #     UserProfile.objects.filter(id = profile.id).update(user = newUser, contact= data['contact'])
+            #     avatar = AddAvatar(request.POST,request.FILES, instance = profile)
+            #     if avatar.is_valid():
+            #         avatar.save()
+            
             return redirect('home-page')
-        else:
-            context['reg_form'] = form
+    else:
+        form = UserRegistration()
+        context['reg_form'] = form
 
     return render(request,'register.html',context)
 
 def registerStudent(request):
-    user = request.user
-    if user.is_authenticated:
-        return redirect('home-page')
+    # user = request.user
+    # if user.is_authenticated:
+    #     return redirect('home-page')
+    context = {}
     context['page_title'] = "Register Student"
-    if request.method == 'POST':
-        data = request.POST
-        form = StudentRegistration(data)
-        if form.is_valid():
-            form.save()
-            newStudent = User.objects.all().last()
-            try:
-                profile = StudentProfile.objects.get(user = newStudent)
-            except:
-                profile = None
-            if profile is None:
-                StudentProfile(user = newStudent, dob= data['dob'], contact= data['contact'], address= data['address'], avatar = request.FILES['avatar']).save()
-            else:
-                StudentProfile.objects.filter(id = profile.id).update(user = newStudent, dob= data['dob'], contact= data['contact'], address= data['address'])
-                avatar = AddAvatar(request.POST,request.FILES, instance = profile)
-                if avatar.is_valid():
-                    avatar.save()
-            username = form.cleaned_data.get('username')
-            pwd = form.cleaned_data.get('password1')
-            loginUser = authenticate(username= username, password = pwd)
-            login(request, loginUser)
-            return redirect('home-page')
-        else:
-            context['reg_form'] = form
+    if request.POST:
+        user_form = StudentRegistration(request.POST)
+        student_form = StudentProfileForm(request.POST)
+        if user_form.is_valid():
+            user = user_form.save(commit=False)
+            user.set_password((user_form.cleaned_data['last_name']).upper())
+            user.save()
 
-    return render(request,'register.html',context)
+            StudentProfile.objects.create(user=user, programme=user.programme, student_id=user)
+            # student_profile = student_form.save(commit=False)
+            # student_profile.user = user
+            # student_profile.student_id = user_form.cleaned_data['username']
+            # student_profile.first_name = user_form.cleaned_data['first_name']
+            # student_profile.middle_name = user_form.cleaned_data['middle_name']
+            # student_profile.last_name = user_form.cleaned_data['last_name']
+                    
+            # student_profile.save()
+
+
+            # newStudent = User.objects.all().last()
+
+
+            
+            # try:
+            #     profile = StudentProfile.objects.get(user = newStudent)
+            # except:
+            #     profile = None
+            # if profile is None:
+            #     StudentProfile(user = newStudent, dob= data['dob'], contact= data['contact'], address= data['address'], avatar = request.FILES['avatar']).save()
+            # else:
+            #     StudentProfile.objects.filter(id = profile.id).update(user = newStudent, dob= data['dob'], contact= data['contact'], address= data['address'])
+            #     avatar = AddAvatar(request.POST,request.FILES, instance = profile)
+            #     if avatar.is_valid():
+            #         avatar.save()
+
+            return redirect('home-page')
+    else:
+        user_form = StudentRegistration()
+        student_form = StudentProfileForm()
+    context['register_student_form'] = user_form
+    context['student_profile_form'] = student_form
+
+    return render(request,'register_student.html', context)
 
 
 
@@ -548,24 +576,26 @@ def manage_student(request,pk=None):
     # course = course.objects.all()
     if pk == None:
         student = {}
-        course = Course.objects.filter(status=1).all()
+        programmes = Programme.objects.all()
     elif pk > 0:
-        student = Student.objects.filter(id=pk).first()
-        course = Course.objects.filter(Q(status=1) or Q(id = course.id)).all()
+        student = StudentProfile.objects.filter(id=pk).first()
+
+        programme = student.programme
     else:
-        course = Course.objects.filter(status=1).all()
+        programmes = Programme.objects.all()
         student = {}
-    context['page_title'] = "Manage Course"
-    context['courses'] = course
+    context['page_title'] = "Manage Student"
+    context['programmes'] = programmes
     context['student'] = student
 
     return render(request, 'manage_student.html',context)
+
 @login_required
 def view_student(request,pk=None):
     if pk == None:
         student = {}
     elif pk > 0:
-        student = Student.objects.filter(id=pk).first()
+        student = StudentProfile.objects.filter(id=pk).first()
     else:
         student = {}
     context['student'] = student
@@ -574,27 +604,18 @@ def view_student(request,pk=None):
 @login_required
 def save_student(request):
     resp = { 'status':'failed' , 'msg' : '' }
-    if request.method == 'POST':
-        student = None
-        print(not request.POST['id'] == '')
-        if not request.POST['id'] == '':
-            student = Student.objects.filter(id=request.POST['id']).first()
-        if not student == None:
-            form = SaveStudent(request.POST,instance = student)
-        else:
-            form = SaveStudent(request.POST)
-    if form.is_valid():
-        form.save()
-        resp['status'] = 'success'
-        messages.success(request, 'Student Details has been saved successfully')
+    context = {}
+    if request.POST:
+        form = SaveStudent(request.POST)
+        if  form.is_valid:
+            form.save()
+            return redirect('student-page')
+            
     else:
-        for field in form:
-            for error in field.errors:
-                resp['msg'] += str(error + '<br>')
-        if not course == None:
-            form = SaveStudent(instance = course)
-    
-    return HttpResponse(json.dumps(resp),content_type="application/json")
+        form = SaveStudent()
+        context['Save_student_form'] = form
+
+    return render(request, 'manage_student.html', context)
 
 @login_required
 def delete_student(request):

@@ -1,5 +1,37 @@
 <div class="container-fluid">
-    <form action=" " id="student-form">
+    <form method="POST">
+        {% csrf_token %}
+        {% for field in Save_student_form %}
+            <p>
+                {{field.label_tag}}
+                {{field}}
+    
+                {% if field.help_text %}
+                    <small style="color:grey;">{{field.help_text}}</small>
+                {% endif %}
+    
+                {% for error in fields.errors %}
+                    <p style="color: red;">{{error}}</p>
+    
+                {% endfor %}
+    
+                {% if Save_student_form.non_field_errors %}
+                    <div style= "color:red;">
+                        <p>{{Save_student_form.non_field_errors}}</p>
+                    </div>
+                {% endif %}
+            </p>
+    
+    
+        {% endfor %}
+        
+        <button type="submit">Done</button>
+    </form>
+</div>
+
+
+
+    <!-- <form action=" " id="student-form">
         {% csrf_token %}
         <input type="hidden" name="id" value="{{ student.id }}">
         <div class="row">
@@ -47,19 +79,19 @@
                     <input type="text" class="form-control rounded-0" name="contact" id="contact" value="{{ student.contact }}" required="required">
                 </div>
                 <div class="form-group mb-3">
-                    <label for="course" class="control-label">Programme</label>
-                    <select name="course" id="course" class="form-select rounded-0 select2" required>
-                        {% if not course.department %}
+                    <label for="programme" class="control-label">Programme</label>
+                    <select name="programme" id="programme" class="form-select rounded-0 select2" required>
+                        {% if not student.programme %}
                         <option disabled selected></option>
                         {% else %}
                         <option disabled></option>
                         {% endif %}
                         
-                        {% for course in courses %}
-                        {% if course == student.course %}
-                        <option value="{{ course.id }}" selected>{{ course }}</option>
+                        {% for programme in programmes %}
+                        {% if programme == student.programme %}
+                        <option value="{{ programme.id }}" selected>{{ programme }}</option>
                         {% else %}
-                        <option value="{{ course.id }}">{{ course }}</option>
+                        <option value="{{ programme.id }}">{{ programme }}</option>
                         {% endif %}
                         {% endfor %}
                     </select>
@@ -134,4 +166,4 @@
             })
         })
     })
-</script>
+</script> -->

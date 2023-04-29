@@ -4,18 +4,36 @@ from unittest.util import _MAX_LENGTH
 from django import forms
 from django.db.models import fields
 from django.contrib.auth.forms import UserCreationForm,PasswordChangeForm, UserChangeForm
+from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
 from django.contrib.auth.models import User
-from attendance.models import Enrollment, UserProfile, Department, Course, StudentProfile, Programme
+from attendance.models import Enrollment, UserProfile, Department, Course, StudentProfile, Programme, User
 
 class UserRegistration(UserCreationForm):
     email = forms.EmailField(max_length=250,help_text="The email field is required.")
     first_name = forms.CharField(max_length=250,help_text="The First Name field is required.")
-    last_name = forms.CharField(max_length=250,help_text="The Last Name field is required.")
+    last_name = forms.CharField(max_length=250,help_text="The Last Name field is required.") 
+    department = forms.ModelChoiceField(queryset=Department.objects.all())
+   
 
     class Meta:
         model = User
-        fields = ('email', 'username', 'password1', 'password2', 'first_name', 'last_name')
+        fields = ('email', 'username', 'first_name', 'middle_name', 'last_name', 'gender', 'department', 'contact')
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].required = True
+        self.fields['password1'].required = False
+        self.fields['password2'].required = False
+        self.fields['email'].widget.attrs.update({'class': 'form-control'})
+        self.fields['first_name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['middle_name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['last_name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['contact'].widget.attrs.update({'class': 'form-control'})
+        self.fields['gender'].widget.attrs.update({'class': 'form-control'})
+        # self.fields['programme'].widget.attrs.update({'class': 'form-control'})
+    
     
 
     def clean_email(self):
@@ -35,13 +53,30 @@ class UserRegistration(UserCreationForm):
         raise forms.ValidationError(f"The {user.username} already exists")
 
 class StudentRegistration(UserCreationForm):
-    email = forms.EmailField(max_length=250,help_text="The email field is required.")
-    first_name = forms.CharField(max_length=250,help_text="The First Name field is required.")
-    last_name = forms.CharField(max_length=250,help_text="The Last Name field is required.")
+    # email = forms.EmailField(max_length=250,help_text="The email field is required.")
+    # first_name = forms.CharField(max_length=250,help_text="The First Name field is required.")
+    # last_name = forms.CharField(max_length=250,help_text="The Last Name field is required.")
+    # middle_name = forms.CharField(required=True) 
+    # contact =  forms.CharField(required=True)
+    # gender = forms.TypedChoiceField(initial=None, choices=[('Male','Male'),('Female','Female')])
+    # programme = forms.ModelChoiceField(queryset=Programme.objects.all())
 
     class Meta:
         model = User
-        fields = ('email', 'username', 'password1', 'password2', 'first_name', 'last_name')
+        fields = ('email', 'username', 'first_name', 'middle_name', 'last_name', 'gender', 'programme', 'contact')
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].required = True
+        self.fields['password1'].required = False
+        self.fields['password2'].required = False
+        self.fields['email'].widget.attrs.update({'class': 'form-control'})
+        self.fields['first_name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['middle_name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['last_name'].widget.attrs.update({'class': 'form-control'})
+        self.fields['contact'].widget.attrs.update({'class': 'form-control'})
+        self.fields['gender'].widget.attrs.update({'class': 'form-control'})
+        self.fields['programme'].widget.attrs.update({'class': 'form-control'})
     
 
     def clean_email(self):
@@ -59,6 +94,42 @@ class StudentRegistration(UserCreationForm):
         except Exception as e:
             return username
         raise forms.ValidationError(f"The {user.username} already exists")
+    
+    # def save(self, commit=True):
+    #     # user_id = self.cleaned_data.get('user_id')
+    #     # user = User.objects.get(id=user_id)
+    #     user = super().save(commit=False)
+    #     user.set_password((self.cleaned_data['last_name']).upper())
+
+    #     if commit:
+    #         user.save()
+            
+
+        # student_profile = StudentProfile.objects.create(ins
+        #     user=user,
+        #     student_id=self.cleaned_data['username'],
+        #     first_name=self.cleaned_data['first_name'],
+        #     middle_name=self.cleaned_data['middle_name'],
+        #     last_name=self.cleaned_data['last_name'],
+        #     gender=self.cleaned_data['gender'],
+        #     contact=self.cleaned_data['contact'],
+        #     programme=self.cleaned_data['programme']
+        # )
+        
+        # return student_profile
+    
+
+class StudentProfileForm(forms.ModelForm):
+    # user = forms.IntegerField()
+    # first_name = forms.CharField(max_length=250,help_text="The First Name field is required.")
+    # last_name = forms.CharField(max_length=250,help_text="The Last Name field is required.")
+    # middle_name = forms.CharField(required=True)
+
+    class Meta:
+        model = StudentProfile
+        fields = ('gender', 'programme', 'contact')
+    
+
 
 
 class UpdateFaculty(UserChangeForm):
@@ -102,7 +173,7 @@ class UpdateProfile(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('email', 'username','first_name', 'last_name')
+        fields = ('email', 'username', 'first_name', 'last_name')
 
     def clean_current_password(self):
         if not self.instance.check_password(self.cleaned_data['current_password']):
@@ -123,6 +194,21 @@ class UpdateProfile(forms.ModelForm):
         except Exception as e:
             return username
         raise forms.ValidationError(f"The {user.username} mail is already exists/taken")
+    
+
+class UserChangeForm(forms.ModelForm):
+    """A form for updating users. Includes all the fields on
+    the user, but replaces the password field with admin's
+    disabled password hash display field.
+    """
+
+    password = ReadOnlyPasswordHashField()
+    is_staff = forms.BooleanField()
+
+    class Meta:
+        model = User
+        fields = ["email", "password", "is_staff", "is_active", "is_admin"]
+
 
 
 
@@ -221,30 +307,31 @@ class SaveProgramme(forms.ModelForm):
     #         raise forms.ValidationError(f'Assigned Faculty value is invalid.')
 
 class SaveStudent(forms.ModelForm):
-    course = forms.IntegerField()
+    # programme = forms.ModelChoiceField(queryset=Programme.objects.all())
+
 
     class Meta:
         model = StudentProfile
-        fields = ('student_id','first_name','middle_name','last_name','gender','dob','course','contact')
+        fields = ('student_id','first_name','middle_name','last_name','gender','programme','contact')
     
-    def clean_student_code(self):
-        code = self.cleaned_data['student_code']
-        try:
-            if not self.instance.id is None:
-                student = Student.objects.exclude(id = self.instance.id).get(student_code = code)
-            else:
-                student = Student.objects.get(student_code = code)
-        except:
-            return code
-        raise forms.ValidationError(f"Student Code {code} already exists.")
+    # def clean_student_code(self):
+    #     code = self.cleaned_data['student_code']
+    #     try:
+    #         if not self.instance.id is None:
+    #             student = Student.objects.exclude(id = self.instance.id).get(student_code = code)
+    #         else:
+    #             student = Student.objects.get(student_code = code)
+    #     except:
+    #         return code
+    #     raise forms.ValidationError(f"Student Code {code} already exists.")
 
-    def clean_course(self):
-        cid = self.cleaned_data['course']
-        try:
-            course = Course.objects.get(id = cid)
-            return course
-        except:
-            raise forms.ValidationError("Invalid Course Value")
+    # def clean_course(self):
+    #     cid = self.cleaned_data['course']
+    #     try:
+    #         course = Course.objects.get(id = cid)
+    #         return course
+    #     except:
+    #         raise forms.ValidationError("Invalid Course Value")
 
 class SaveClassStudent(forms.ModelForm):
     classIns = forms.IntegerField()
