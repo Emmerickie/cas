@@ -51,4 +51,5 @@ urlpatterns = [
     path(r'attendance/<int:classPK>',views.attendance,name='attendance-page'),
     path(r'attendance/<int:classPK>/<str:date>',views.attendance,name='attendance-page-date'),
     path('save_attendance',views.save_attendance,name='save-attendance'),
+    path('enroll_student',views.enroll_student,name='enroll-student')
 ]

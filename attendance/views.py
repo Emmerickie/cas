@@ -14,7 +14,7 @@ from django.db.models import Q
 from ams.settings import MEDIA_ROOT, MEDIA_URL
 from attendance.models import Attendance, UserProfile,Course, Department, StudentProfile, Course, Enrollment, Teaching, Programme, User
 
-from attendance.forms import UserRegistration, StudentRegistration, UpdateProfile, UpdateProfileMeta, UpdateProfileAvatar, AddAvatar, SaveDepartment, SaveCourse, SaveProgramme, SaveStudent, SaveClassStudent, UpdatePasswords, UpdateFaculty, StudentProfileForm
+from attendance.forms import UserRegistration, StudentRegistration, UpdateProfile, UpdateProfileMeta, UpdateProfileAvatar, AddAvatar, SaveDepartment, SaveCourse, SaveProgramme, SaveStudent, SaveClassStudent, UpdatePasswords, UpdateFaculty, StudentProfileForm, EnrollForm
 
 deparment_list = Department.objects.exclude(status = 2).all()
 context = {
@@ -134,7 +134,7 @@ def registerStudent(request):
             user.set_password((user_form.cleaned_data['last_name']).upper())
             user.save()
 
-            StudentProfile.objects.create(user=user, programme=user.programme, student_id=user)
+            StudentProfile.objects.create(user=user, programme=user.programme, student_id=user, year_of_study=user.year_of_study)
             # student_profile = student_form.save(commit=False)
             # student_profile.user = user
             # student_profile.student_id = user_form.cleaned_data['username']
@@ -278,7 +278,7 @@ def save_department(request):
         form = SaveDepartment(request.POST)
         if form.is_valid:
             form.save()
-            return render(request, 'department_mgt.html')
+            return redirect('department-page')
             
     else:
         form = SaveDepartment()
@@ -521,6 +521,29 @@ def delete_class(request):
         except Exception as e:
             raise print(e)
     return HttpResponse(json.dumps(resp),content_type="application/json")
+
+
+def enroll_student(request):
+    context = {}
+    if request.method == 'POST':
+        form = EnrollForm(request.POST)
+        if form.is_valid():
+            student = form.cleaned_data['student']
+            course = form.cleaned_data['course']
+            enrollment, created = Enrollment.objects.get_or_create(student=student, course=course)
+            if created:
+                # If a new enrollment was created
+                return redirect('enrollment_success')
+            else:
+                # If the enrollment already exists
+                form.add_error(None, 'This student is already enrolled in this course.')
+    else:
+        form = EnrollForm()
+        context['enroll_form'] = form
+    return render(request, 'enroll_student.html', context)
+
+
+
 
 @login_required
 def manage_class_student(request,classPK = None):

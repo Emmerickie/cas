@@ -63,7 +63,7 @@ class StudentRegistration(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('email', 'username', 'first_name', 'middle_name', 'last_name', 'gender', 'programme', 'contact')
+        fields = ('email', 'username', 'first_name', 'middle_name', 'last_name', 'gender', 'programme', 'year_of_study', 'contact')
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -77,7 +77,8 @@ class StudentRegistration(UserCreationForm):
         self.fields['contact'].widget.attrs.update({'class': 'form-control'})
         self.fields['gender'].widget.attrs.update({'class': 'form-control'})
         self.fields['programme'].widget.attrs.update({'class': 'form-control'})
-    
+        self.fields['year_of_study'].widget.attrs.update({'class': 'form-control'})
+
 
     def clean_email(self):
         email = self.cleaned_data['email']
@@ -128,6 +129,20 @@ class StudentProfileForm(forms.ModelForm):
     class Meta:
         model = StudentProfile
         fields = ('gender', 'programme', 'contact')
+
+
+class EnrollForm(forms.Form):
+    # programme = forms.ModelChoiceField(queryset=Programme.objects.all())
+    student = forms.ModelChoiceField(queryset=StudentProfile.objects.all())
+    course = forms.ModelChoiceField(queryset=Course.objects.all())
+
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     if 'programme' in self.data:
+    #         self.fields['student'].queryset = StudentProfile.objects.filter(programme=self.data['programme'])
+    #     # elif self.instance.pk:
+    #     #     self.fields['student'].queryset = self.instance.programme.student_set.all()
+    
     
 
 
@@ -254,7 +269,7 @@ class AddAvatar(forms.ModelForm):
 
 class SaveDepartment(forms.ModelForm):
     department_id = forms.CharField(max_length=100,help_text = "Department id Field is required.")
-    name = forms.Textarea()
+    name = forms.CharField(widget=forms.TextInput(attrs={'style': 'width: 300px'}))
 
     class Meta:
         model= Department
@@ -267,7 +282,7 @@ class SaveCourse(forms.ModelForm):
 
     class Meta:
         model= Course
-        fields = ('course_id', 'name', 'department', 'status')
+        fields = ('course_id', 'name', 'year_of_study', 'semester', 'department', 'status')
 
     # def clean_department(self):
     #     department = self.cleaned_data['department']
@@ -292,7 +307,7 @@ class SaveProgramme(forms.ModelForm):
     department = forms.ModelChoiceField(queryset=Department.objects.all())
     # school_year = forms.CharField(max_length=250,help_text = "School Year Field is required.")
     # level = forms.CharField(max_length=250,help_text = "Level Field is required.")
-    # name = forms.CharField(max_length=250,help_text = "Class Name Field is required.")
+    name = forms.CharField(max_length=250,help_text = "Class Name Field is required.",widget=forms.TextInput(attrs={'style': 'width: 300px'}))
 
     class Meta:
         model= Programme

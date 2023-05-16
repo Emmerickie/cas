@@ -15,7 +15,7 @@
             <div class="button-box">
                 <div id="bttn"></div>
                 <button type="button" class="toggle-btn" onclick="login()">Login</button>
-                <button type="button" class="toggle-btn" onclick="register()">Regis</button>
+                <!-- <button type="button" class="toggle-btn" onclick="register()">Regis</button> -->
             </div>
             <form id="login-user" class="input-group">
                 {% csrf_token %}
@@ -23,8 +23,8 @@
                 <input type="password" class="input-field rounded-0" placeholder="Password" name="password" required>
                 <input type="checkbox" class="check-box"><span>Remember Password</span>
                 <button type="submit" class="submit-btn btn btn-sm rounded-0 btn-primary">Login</button>
-            </form>
-            <form id="register" class="input-group">
+            <!-- </form> -->
+            <!-- <form id="register" class="input-group">
                 {% csrf_token %}
                 <input type="text" class="input-field rounded-0" placeholder="Username" name="username" required>
                 <input type="email" class="input-field rounded-0" placeholder="Email" name="email" required>
@@ -32,7 +32,7 @@
                 <input type="password" class="input-field rounded-0" placeholder="Confirm Password" name="password2" required>
                 <input type="checkbox" class="check-box"><span>I Agree to the terms & conditions</span>
                 <button type="submit" class="submit-btn btn btn-sm rounded-0 btn-primary">Register</button>
-            </form>
+            </form> -->
         </div>
     </div>
 </div>

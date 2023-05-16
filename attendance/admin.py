@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .forms import UserRegistration, UserChangeForm
 
-from .models import Department, Course, StudentProfile, UserProfile, Programme, Attendance, Teaching, Enrollment, User
+from .models import Department, Course, StudentProfile, UserProfile, Programme, Attendance, Teaching, Enrollment, User, Venue, Schedule, AcademicTerm, Semester, StudentAttendance, InstructorAttendance
 
 # Register your models here.
 
@@ -20,4 +20,9 @@ admin.site.register(StudentProfile)
 admin.site.register(Teaching)
 admin.site.register(Enrollment)
 admin.site.register(User)
-
+admin.site.register(Venue)
+admin.site.register(Schedule)
+admin.site.register(AcademicTerm)
+admin.site.register(Semester)
+admin.site.register(StudentAttendance)
+admin.site.register(InstructorAttendance)
