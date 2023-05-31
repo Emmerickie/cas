@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block pageContent %}
+<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    <div class="card card-default rounded-0 shadow ">
+        <div class="card-header">
+                <h1>Course Details</h1>
+
+                <h2>Course Name: {{ course.name }}</h2>
+                <p>Course ID: {{ course.course_id }}</p>
+
+                <h3>Lecturers</h3>
+                <ul>
+                    {% for lecturer in course.lecturers.all %}
+                        <li>{{ lecturer }}</li>
+                    {% endfor %}
+                </ul>
+
+                <h3>Programmes Studying the Course</h3>
+                <ul>
+                    {% for programme in programmes %}
+                        <li>{{ programme.programme }}</li>
+                    {% endfor %}
+                </ul>
+
+                <h3>Students Enrolled</h3>
+                <ul>
+                    {% for enrollment in course.enrollments.all %}
+                        <li>{{ enrollment.student }}</li>
+                    {% endfor %}
+                </ul>
+
+                {% if current_semester == course.semester %}
+                    <h3>Schedule</h3>
+                    <p>Start Time: {{ course.schedule.start_time }}</p>
+                    <p>End Time: {{ course.schedule.end_time }}</p>
+                    <p>Location: {{ course.schedule.location }}</p>
+                {% endif %}
+
+                {% if user.is_authenticated and user.is_lecturer %}
+                    <h3>Enroll Students</h3>
+                    <form action="{% url 'enroll_students' course.pk %}" method="post">
+                        {% csrf_token %}
+                        <!-- Include form fields for enrolling students -->
+                        <!-- E.g., select field with all available students -->
+                        <button type="submit">Enroll Students</button>
+                    </form>
+                {% endif %}
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock pageContent%}

@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'attendance.apps.AttendanceConfig',
+
+    'django_filters'
 ]
 
 MIDDLEWARE = [
@@ -130,7 +132,7 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATICFILES_DIRS = (
-    './static',
+    BASE_DIR/'static',
 )
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/login'

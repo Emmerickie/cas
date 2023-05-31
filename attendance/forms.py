@@ -7,14 +7,14 @@ from django.contrib.auth.forms import UserCreationForm,PasswordChangeForm, UserC
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
 from django.contrib.auth.models import User
-from attendance.models import Enrollment, UserProfile, Department, Course, StudentProfile, Programme, User
+from attendance.models import Enrollment, UserProfile, Department, Course, StudentProfile, Programme, User, AcademicTerm, Semester
 
 class UserRegistration(UserCreationForm):
     email = forms.EmailField(max_length=250,help_text="The email field is required.")
     first_name = forms.CharField(max_length=250,help_text="The First Name field is required.")
     last_name = forms.CharField(max_length=250,help_text="The Last Name field is required.") 
     department = forms.ModelChoiceField(queryset=Department.objects.all())
-   
+    
 
     class Meta:
         model = User
@@ -129,6 +129,31 @@ class StudentProfileForm(forms.ModelForm):
     class Meta:
         model = StudentProfile
         fields = ('gender', 'programme', 'contact')
+
+class AcademicYearForm(forms.ModelForm):
+    class Meta:
+        model = AcademicTerm
+        fields = ['academic_year']
+
+class Semester1Form(forms.ModelForm):
+    class Meta:
+        model = Semester
+        fields = ['start_date', 'end_date']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+class Semester2Form(forms.ModelForm):
+    class Meta:
+        model = Semester
+        fields = ['start_date', 'end_date']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+
 
 
 class EnrollForm(forms.Form):
@@ -282,7 +307,7 @@ class SaveCourse(forms.ModelForm):
 
     class Meta:
         model= Course
-        fields = ('course_id', 'name', 'year_of_study', 'semester', 'department', 'status')
+        fields = ('course_id', 'name', 'department', 'status')
 
     # def clean_department(self):
     #     department = self.cleaned_data['department']

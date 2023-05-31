@@ -13,3 +13,9 @@ x.style.left = "50px";
 y.style.left = "450px";
 z.style.left = "0px";
 }
+
+$(document).ready(function(){
+    $('.slider').slick({
+      // slider options
+    });
+});

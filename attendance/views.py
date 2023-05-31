@@ -1,20 +1,25 @@
 from unicodedata import category
 from aiohttp import request
 from django.http import HttpResponse
+from django.shortcuts import render, get_object_or_404
+
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 import json
-from datetime import datetime
+import pytz
+from datetime import datetime, timedelta
+from datetime import date
 # from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q
 from ams.settings import MEDIA_ROOT, MEDIA_URL
-from attendance.models import Attendance, UserProfile,Course, Department, StudentProfile, Course, Enrollment, Teaching, Programme, User
+from django.core.exceptions import ValidationError
 
-from attendance.forms import UserRegistration, StudentRegistration, UpdateProfile, UpdateProfileMeta, UpdateProfileAvatar, AddAvatar, SaveDepartment, SaveCourse, SaveProgramme, SaveStudent, SaveClassStudent, UpdatePasswords, UpdateFaculty, StudentProfileForm, EnrollForm
+from attendance.models import *
+from attendance.forms import UserRegistration, StudentRegistration, UpdateProfile, UpdateProfileMeta, UpdateProfileAvatar, AddAvatar, SaveDepartment, SaveCourse, SaveProgramme, SaveStudent, SaveClassStudent, UpdatePasswords, UpdateFaculty, StudentProfileForm, EnrollForm, AcademicYearForm, Semester1Form, Semester2Form
 
 deparment_list = Department.objects.exclude(status = 2).all()
 context = {
@@ -310,6 +315,23 @@ def course(request):
     return render(request, 'course_mgt.html',context)
 
 @login_required
+def course_detail(request, course_id):
+    course = get_object_or_404(Course, course_id=course_id)
+    current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+    lecturers = Teaching.objects.filter(course=course)
+    programmes = ProgrammeCourse.objects.filter(course=course)
+    students = Enrollment.objects.filter(course=course, semester=current_semester)
+    context = { 
+        'course': course,
+        'current_semester': current_semester,
+        'programmes': programmes,
+        'lecturers': lecturers,
+        'students':students
+    }
+    
+    return render(request, 'course_details.html', context)
+
+@login_required
 def manage_course(request,pk=None):
     # course = course.objects.all()
     if pk == None:
@@ -522,6 +544,69 @@ def delete_class(request):
             raise print(e)
     return HttpResponse(json.dumps(resp),content_type="application/json")
 
+def new_academic_year(request):
+    context['page_title'] = "New Academic Year"
+    if request.POST:
+        form = AcademicYearForm(request.POST)
+        form1 = Semester1Form(request.POST)
+        form2 = Semester2Form(request.POST)
+        if  form1.is_valid and form2.is_valid:
+            semester_1 = form1.save(commit=False)
+            semester_2 = form2.save(commit=False)
+            academic_year = form.save(commit=False)
+
+            # Set the academic year for semesters
+            semester_1.academic_year = academic_year
+            semester_2.academic_year = academic_year
+
+            # Set the semester values
+            semester_1.semester = '1'
+            semester_2.semester = '2'
+
+            academic_year.start_date = semester_1.start_date
+            academic_year.end_date = semester_2.end_date
+
+            # Save the objects
+            academic_year.save()
+            semester_1.save()
+            semester_2.save()
+
+            
+            # Update students' year of study and status
+            update_students_year_of_study(academic_year)
+        return redirect('success')
+            
+    else:
+        form = AcademicYearForm()
+        form1 = Semester1Form()
+        form2 = Semester2Form()
+
+    context['academic_year_form'] = form
+    context['semester1_form'] = form1
+    context['semester2_form'] = form2
+
+
+    return render(request, 'new_academic_year.html', context)
+
+
+
+def update_students_year_of_study(self):
+    students = StudentProfile.objects.all()
+    for student in students:
+            last_modified_date = student.date_updated.date()
+            current_date = date.today()
+            year_diff = (current_date - last_modified_date).days // 365  # Get the difference in years
+
+            new_year_of_study = int(student.year_of_study) + year_diff
+
+            # Check if the new year of study exceeds the program duration
+            if new_year_of_study > int(student.programme.duration):
+                student.status = 'completed'
+            else:
+                student.year_of_study = str(new_year_of_study)
+
+            student.save()
+
 
 def enroll_student(request):
     context = {}
@@ -542,6 +627,78 @@ def enroll_student(request):
         context['enroll_form'] = form
     return render(request, 'enroll_student.html', context)
 
+def enroll_students_in_course(request, course_id):
+
+
+    current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+    course = get_object_or_404(Course, course_id=course_id)
+
+    # if course.semester != current_semester.semester:
+    #     return
+
+    # eligible_programmes =  ProgrammeCourse.objects.filter(course=course)
+
+    # eligible_students = StudentProfile.objects.filter(
+    #     programme=course,
+    #     year_of_study=course.programmecourse.level,
+    #     status='continuing'
+    # )
+
+    # eligible_students = eligible_students.filter(
+    #     # enrollment__isnull=True,
+    #     course__programmecourse__course=course,
+    #     course__programmecourse__course_type='C',
+    #     course__semester=current_semester.semester
+    # ).distinct()
+
+
+    eligible_programmes = ProgrammeCourse.objects.filter(course=course, semester=current_semester.semester, status='C')
+    if eligible_programmes.exists():
+        for eligible_programme in eligible_programmes:
+            level = eligible_programme.level
+            # Enroll students who have the course as a core, matching level, status as Continuing, and program status as Core
+            students = StudentProfile.objects.filter(programme=eligible_programme.programme, year_of_study=level, status='Continuing')
+            
+            for student in students:
+                # Enroll the student in the course for the current semester
+                Enrollment.objects.create(student=student, course=course, semester=current_semester)
+
+                # initialize the attendance which may we should put it to when schedule is created or modified
+            current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+            course = get_object_or_404(Course, course_id=course_id)
+
+
+            schedule_lessons = Schedule.objects.filter(course=course)
+
+            if schedule_lessons.exists():
+                for schedule_lesson in schedule_lessons:
+                    start_date = current_semester.start_date
+                    end_date = current_semester.end_date
+
+                    if start_date <= end_date:
+                        current_date = start_date
+                        while current_date <= end_date:
+                            if current_date.strftime('%A') == schedule_lesson.day:
+                                attendance = Attendance.objects.create(date=current_date, lesson=schedule_lesson)
+
+                                eligible_students = Enrollment.objects.filter(course=course, semester=current_semester).values_list('student_id', flat=True)
+                                for student_id in eligible_students:
+                                    StudentAttendance.objects.create(attendance=attendance, student_id=student_id)
+
+                            current_date += timedelta(days=1)
+                # create response or redirect
+
+            else:
+                raise ValidationError("No schedule found for the course.")
+
+                
+    else:
+        raise ValidationError("Invalid semester or course.")
+    
+
+
+
+
 
 
 
@@ -556,6 +713,8 @@ def manage_class_student(request,classPK = None):
         students = Student.objects.exclude(id__in = ClassStudent.objects.filter(classIns = _class).values_list('student').distinct()).all()
         context['students'] = students
         return render(request, 'manage_class_student.html',context)
+    
+
 @login_required
 def save_class_student(request):
     resp = {'status' : 'failed', 'msg':''}
@@ -654,6 +813,23 @@ def delete_student(request):
             raise print(e)
     return HttpResponse(json.dumps(resp),content_type="application/json")
 
+
+def lecturer_timetable(request):
+    # Assuming you have the logged-in lecturer user object
+    lecturer = request.user.profile
+
+    # Get the courses taught by the lecturer
+    courses_taught = Teaching.objects.filter(lecturer=lecturer).values_list('course', flat=True)
+
+    # Get the schedules for the courses taught by the lecturer
+    schedules = Schedule.objects.filter(course__in=courses_taught)
+
+    context = {
+        'schedules': schedules,
+    }
+
+    return render(request, 'lecturer_timetable.html', context)
+
 #Attendance
 @login_required
 def attendance_class(request):
@@ -667,45 +843,176 @@ def attendance_class(request):
 
 
 @login_required
-def attendance(request,classPK = None, date=None):
-    _class = Class.objects.get(id = classPK)
-    students = Student.objects.filter(id__in = ClassStudent.objects.filter(classIns = _class).values_list('student')).all()
-    context['page_title'] = "Attendance Management"
-    context['class'] = _class
-    context['date'] = date
-    att_data = {}
-    for student in students:
-        att_data[student.id] = {}
-        att_data[student.id]['data'] = student
-    if not date is None:
-        date = datetime.strptime(date, '%Y-%m-%d')
-        year = date.strftime('%Y')
-        month = date.strftime('%m')
-        day = date.strftime('%d')
-        attendance = Attendance.objects.filter(attendance_date__year = year, attendance_date__month = month, attendance_date__day = day, classIns = _class).all()
-        for att in attendance:
-            att_data[att.student.pk]['type'] = att.type
-    print(list(att_data.values()))
-    context['att_data'] = list(att_data.values())
-    context['students'] = students
+def student_attendance(request):
+    # Get the current date and time
+    # Implement your fingerprint recognition logic to retrieve the user's fingerprint data
 
-    return render(request, 'attendance_mgt.html',context)
+    # Find the current course based on the schedule
+    current_course = Schedule.objects.filter(start_time__lte=current_time, end_time__gte=current_time).first()
+
+    # Check if the student is enrolled in the current course
+    enrolled = Enrollment.objects.filter(student=request.user.student, course=current_course.course).exists()
+
+    # Check if the course is an elective for the student's programme
+    elective = ProgrammeCourse.objects.filter(programme=request.user.student.programme, level = request.user.student.year_of_study, course=current_course.course, course_type='E').exists()
+
+    if not enrolled and elective:
+        # Add the student to enrollment
+        Enrollment.objects.create(student=request.user.student, course=current_course.course)
+
+    # Record the student's attendance  ?  ,created
+    attendance = Attendance.objects.get_or_create(lesson=current_course, date=current_date)
+    StudentAttendance.objects.create(lesson=attendance, student=request.user.student, time=current_time)
+
+    return HttpResponse("Attendance recorded successfully!")
 
 @login_required
-def save_attendance(request):
-    resp = {'status' : 'failed', 'msg':''}
-    if request.method == 'POST':
-        post = request.POST
-        date = datetime.strptime(post['attendance_date'], '%Y-%m-%d')
-        year = date.strftime('%Y')
-        month = date.strftime('%m')
-        day = date.strftime('%d')
-        _class = Class.objects.get(id=post['classIns'])
-        Attendance.objects.filter(attendance_date__year = year, attendance_date__month = month, attendance_date__day = day,classIns = _class).delete()
-        for student in post.getlist('student[]'):
-            type = post['type['+student+']']
-            studInstance = Student.objects.get(id = student)
-            att = Attendance(student=studInstance,type = type,classIns = _class,attendance_date=post['attendance_date']).save()
-        resp['status'] = 'success'
-        messages.success(request,"Attendance has been saved successfully.")
-    return HttpResponse(json.dumps(resp),content_type="application/json")
+def lecturer_attendance(request):
+    # Get the current date and time
+    # Implement your fingerprint recognition logic to retrieve the user's fingerprint data
+
+    # Find the current course based on the schedule
+    current_course = Schedule.objects.filter(start_time__lte=current_time, end_time__gte=current_time).first()
+
+    # Check if the lecturer is assigned to teach the current course
+    assigned = Teaching.objects.filter(lecturer=request.user.lecturer, course=current_course.course).exists()
+
+    if assigned:
+        attendance, created = Attendance.objects.get_or_create(lesson=current_course, date=current_date)
+
+        # Record the lecturer's attendance
+
+        InstructorAttendance.objects.create(lecturer=request.user.lecturer, lesson=attendance, time=current_time)
+
+    return HttpResponse("Attendance recorded successfully!")
+
+
+def course_attendance(request, course_id):
+    course = get_object_or_404(Course, course_id=course_id)
+    schedules = Schedule.objects.filter(course=course)
+
+
+
+    if len(schedules) == 0:
+        # No schedules found for the course
+        return render(request, 'no_schedule.html', {'course': course})
+    
+    current_date = timezone.now().date()
+    students = StudentProfile.objects.filter(enrollment__course=course).distinct()
+    attendances = Attendance.objects.filter(lesson__in=schedules, date__lte=current_date)
+
+    # Fetch student attendances for the given course and attendance dates
+    student_attendances = StudentAttendance.objects.filter(
+        attendance__in=attendances,
+        student__in=students
+    )
+
+    # Create a dictionary to store student attendances indexed by student and attendance date
+    attendance_dict = {}
+    for student_attendance in student_attendances:
+        attendance_dict.setdefault(student_attendance.student, {})[student_attendance.attendance] = student_attendance.is_present
+
+    context = {
+        'course': course,
+        'students': students,
+        'attendances': attendances,
+        'attendance_dict': attendance_dict
+    }
+
+    return render(request, 'course_attendance.html', context)
+
+    # Retrieve the current date and time from today above
+    # current_time = today.time()
+    # current_date = today.date()
+
+
+    # context = {
+    #     'course': course,
+    #     'schedules': current_schedules,
+    #     'student_attendances': student_attendances,
+    #     # 'student_attendance': student_attendance,
+    # }
+
+    
+
+    # # Check if the current date and time fall within any of the scheduled lessons
+    # current_schedules = []
+    # for schedule in schedules:
+
+    #     if schedule.day == today.strftime('%A') and schedule.start_time <= current_time <= schedule.end_time:
+    #         current_schedules.append(schedule)
+    #         attendance, created = Attendance.objects.get_or_create(lesson=schedule, date=current_date )
+
+
+
+            
+                
+
+    # enrollments = Enrollment.objects.filter(course=course)
+
+    # for enrollment in enrollments:
+    #         student = enrollment.student
+    #         student_attendance, created = StudentAttendance.objects.get_or_create(attendance=attendance, student=student)
+
+    
+    
+    # student_attendances = StudentAttendance.objects.filter(attendance=attendance)
+
+    
+    # else:
+    #     # Current date and time do not fall within any of the scheduled lessons
+    #     previous_attendances = Attendance.objects.filter(lesson__course=course)
+
+    #     context = {
+    #         'course': course,
+    #         'previous_attendances': previous_attendances,
+    #     }
+
+    #     return render(request, 'previous_attendance.html', context)
+
+# def course_attendance(request, course_id, classPK = None, date=None):
+#     course = get_object_or_404(Course, course_id=course_id)
+
+
+
+#     _class = Class.objects.get(id = classPK)
+#     students = Student.objects.filter(id__in = ClassStudent.objects.filter(classIns = _class).values_list('student')).all()
+#     context['page_title'] = "Attendance Management"
+#     context['class'] = _class
+#     context['date'] = date
+#     att_data = {}
+#     for student in students:
+#         att_data[student.id] = {}
+#         att_data[student.id]['data'] = student
+#     if not date is None:
+#         date = datetime.strptime(date, '%Y-%m-%d')
+#         year = date.strftime('%Y')
+#         month = date.strftime('%m')
+#         day = date.strftime('%d')
+#         attendance = Attendance.objects.filter(attendance_date__year = year, attendance_date__month = month, attendance_date__day = day, classIns = _class).all()
+#         for att in attendance:
+#             att_data[att.student.pk]['type'] = att.type
+#     print(list(att_data.values()))
+#     context['att_data'] = list(att_data.values())
+#     context['students'] = students
+
+#     return render(request, 'attendance_mgt.html',context)
+
+# @login_required
+# def save_attendance(request):
+#     resp = {'status' : 'failed', 'msg':''}
+#     if request.method == 'POST':
+#         post = request.POST
+#         date = datetime.strptime(post['attendance_date'], '%Y-%m-%d')
+#         year = date.strftime('%Y')
+#         month = date.strftime('%m')
+#         day = date.strftime('%d')
+#         _class = Class.objects.get(id=post['classIns'])
+#         Attendance.objects.filter(attendance_date__year = year, attendance_date__month = month, attendance_date__day = day,classIns = _class).delete()
+#         for student in post.getlist('student[]'):
+#             type = post['type['+student+']']
+#             studInstance = Student.objects.get(id = student)
+#             att = Attendance(student=studInstance,type = type,classIns = _class,attendance_date=post['attendance_date']).save()
+#         resp['status'] = 'success'
+#         messages.success(request,"Attendance has been saved successfully.")
+#     return HttpResponse(json.dumps(resp),content_type="application/json")

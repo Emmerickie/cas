@@ -1,0 +1,61 @@
+<h2>New Academic Year</h2>
+<form method="POST">
+    {% csrf_token %}
+    {% for field in academic_year_form %}
+        <p>
+            {{field.label_tag}}
+            {{field}}
+            <br>
+
+            {% if field.help_text %}
+                <small style="color:black;">{{field.help_text}}</small>
+            {% endif%}
+
+            {% if error in fields.errors %}
+                <p style="color: red;">{{error}}</p>
+
+            {% endif %}
+        </p>
+
+
+    {% endfor %}
+    <h3>First Semester</h3>
+    {% for field in semester1_form %}
+        <p>
+            {{field.label_tag}}
+            {{field}}
+            <br>
+
+            {% if field.help_text %}
+                <small style="color:black;">{{field.help_text}}</small>
+            {% endif%}
+
+            {% if error in fields.errors %}
+                <p style="color: red;">{{error}}</p>
+
+            {% endif %}
+        </p>
+    {% endfor %}
+    <h3>Second Semester</h3>
+    {% for field in semester2_form %}
+    <p>
+        {{field.label_tag}}
+        {{field}}
+        <br>
+
+        {% if field.help_text %}
+            <small style="color:black;">{{field.help_text}}</small>
+        {% endif%}
+
+        {% if error in fields.errors %}
+            <p style="color: red;">{{error}}</p>
+
+        {% endif %}
+    </p>
+{% endfor %}
+
+    
+    <button type="submit">Create</button>
+
+
+</form>

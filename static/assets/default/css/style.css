@@ -55,7 +55,7 @@ body>footer {
 }
 
 .custom-brand {
-    width: 500px; /* or whatever value you want */
+    width: 80px; /* or whatever value you want */
 }
 
 .navbar-brand>img {
@@ -225,6 +225,22 @@ span.select2-selection.select2-selection--single {
     border-left-width: 5px !important;
     border-left-style: solid;
 }
+
+.table-container {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.table {
+    width: auto;
+    table-layout: auto;
+}
+
+
+.attendance-date-column {
+    width: 10%; /* Adjust the width as needed */
+}
+
 /* 
 .form-box {
     width: 380px;

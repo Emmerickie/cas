@@ -25,9 +25,14 @@ class Department(models.Model):
         return self.department_id
 
 class Programme(models.Model):
+    DURATION_CHOICES = (
+        ('3', 'Three Years'),
+        ('4', 'Four Years'),
+    )
     department = models.ForeignKey(Department, on_delete=models.CASCADE, blank=True, null=True)
     programme_id = models.CharField(max_length=15, unique=True)
     name = models.CharField(max_length=250)
+    duration = models.CharField(choices=DURATION_CHOICES, max_length=1)
     date_added = models.DateTimeField(default=timezone.now)
     date_updated = models.DateTimeField(auto_now=True)
     
@@ -202,13 +207,39 @@ class Course(models.Model):
     status = models.IntegerField(default = 1, choices=STATUS)
     date_added = models.DateTimeField(default=timezone.now)
     date_updated = models.DateTimeField(auto_now=True)
-    year_of_study = models.CharField(choices=YEAR_OF_STUDY_CHOICES, max_length=1)
-    semester = models.CharField(choices=SEMESTER, max_length=1)
+    # year_of_study = models.CharField(choices=YEAR_OF_STUDY_CHOICES, max_length=1)
+    # semester = models.CharField(choices=SEMESTER, max_length=1)
 
 
 
     def __str__(self):
         return self.course_id
+    
+class ProgrammeCourse(models.Model):
+    PROGRAMME_COURSE_CHOICES = (
+        ('E', 'Elective'),
+        ('C', 'Core')
+    )
+    LEVEL = (
+    ('1', 'First Year'),
+    ('2', 'Second Year'),
+    ('3', 'Third Year'),
+    ('4', 'Fourth Year'),
+    )
+    SEMESTER = (
+        ('1', 'First Semester'),
+        ('2', 'Second Semester')
+    )
+
+    programme = models.ForeignKey(Programme, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    status = models.CharField(max_length=1, choices=PROGRAMME_COURSE_CHOICES)
+    level = models.CharField(choices=LEVEL, max_length=1)
+    semester = models.CharField(choices=SEMESTER, max_length=1)
+    
+    def __str__(self):
+        return f"{self.programme} - {self.course}"
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -246,7 +277,7 @@ class Teaching(models.Model):
     date_registered = models.DateField(auto_now_add=True)
 
     def __str__(self):
-          return f"{self.lecturer} {self.course}"
+        return f"{self.lecturer} {self.course}"
 
 
 
@@ -261,6 +292,10 @@ class StudentProfile(models.Model):
     ('4', 'Fourth Year'),
     )
 
+    STATUS_CHOICES = (
+        ('Continuing', 'Continuing'),
+        ('Completed', 'Completed'),
+    )
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='student')
     student_id = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', on_delete=models.CASCADE)
     course = models.ManyToManyField(Course, through='Enrollment')
@@ -274,7 +309,8 @@ class StudentProfile(models.Model):
     date_updated = models.DateTimeField(auto_now=True)
     programme = models.ForeignKey(Programme, to_field='programme_id', on_delete=models.CASCADE)
     year_of_study = models.CharField(choices=YEAR_OF_STUDY_CHOICES, max_length=1)
-    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Continuing')
+
     def __str__(self):
         full_name = self.last_name + ", " + self.first_name
         if self.middle_name:
@@ -303,6 +339,10 @@ class Enrollment(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     date_enrolled = models.DateField(auto_now_add=True)
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('student', 'course', 'date_enrolled', 'semester')
+
     def __str__(self):
         # full_name = self.last_name + ", " + self.first_name
         # if self.middle_name:
@@ -349,7 +389,9 @@ class Schedule(models.Model):
     ('Tuesday', 'Tuesday'),
     ('Wednesday', 'Wednesday'),
     ('Thursday', 'Thursday'),
-    ('Friday', 'Friday')
+    ('Friday', 'Friday'),
+    ('Saturday', 'Saturday'),
+    ('Sunday', 'Sunday'),
     )
 
     day = models.CharField(choices=DAY, max_length=9)
@@ -361,11 +403,15 @@ class Schedule(models.Model):
     def __str__(self):
         return f"{self.day} {self.course}"
 
+
+    
+
+
 class Attendance(models.Model):
     # lecturer
     # semester (at the time or current)
     date = models.DateField(default=timezone.now) #itoke kwenye schedule pia
-    course = models.ForeignKey(Course,on_delete=models.CASCADE) #itoke kwenye schedule?
+    lesson = models.ForeignKey(Schedule,  on_delete=models.CASCADE) #itoke kwenye schedule?
     # student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE)
     lecturer = models.ManyToManyField(UserProfile, through='InstructorAttendance')
     # type = models.CharField(max_length=250, choices = [('1','Present'),('2','Tardy'),('1','Absent')] )
@@ -375,24 +421,24 @@ class Attendance(models.Model):
     # is_present = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.course.name + "  " + str(self.date)
+        return self.lesson.course.name + "  " + str(self.date)
     
 
 class StudentAttendance(models.Model):
-    lesson = models.ForeignKey(Attendance, on_delete=models.CASCADE)
+    attendance = models.ForeignKey(Attendance, on_delete=models.CASCADE)
     student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE)
     is_present = models.BooleanField(default=False)
 
     def __str__(self):
-        return str(self.lesson) + "  " + self.student.user.username
+        return str(self.attendance) + "  " + self.student.user.username
     
 class InstructorAttendance(models.Model):
-    lesson = models.ForeignKey(Attendance, on_delete=models.CASCADE)
+    attendance = models.ForeignKey(Attendance, on_delete=models.CASCADE)
     lecturer = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     is_present = models.BooleanField(default=False)
 
     def __str__(self):
-        return str(self.lesson) + "  " + self.lecturer.user.username
+        return str(self.attendance) + "  " + self.lecturer.user.username
 
 class Report(models.Model):
     #semester in which report is taken
@@ -405,13 +451,3 @@ class FingerPrintScanner(models.Model):
     scanner_id = models.CharField(max_length=100, unique=True)
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE)
     
-
-
-
-
-
-
-
-
-    
-

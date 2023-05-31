@@ -48,8 +48,15 @@ urlpatterns = [
     path('save_student',views.save_student,name='save-student'),
     path('delete_student',views.delete_student,name='delete-student'),
     path('attendance_class',views.attendance_class,name='attendance-class'),
-    path(r'attendance/<int:classPK>',views.attendance,name='attendance-page'),
-    path(r'attendance/<int:classPK>/<str:date>',views.attendance,name='attendance-page-date'),
-    path('save_attendance',views.save_attendance,name='save-attendance'),
-    path('enroll_student',views.enroll_student,name='enroll-student')
+    # path(r'attendance/<int:classPK>',views.attendance,name='attendance-page'),
+    # path(r'attendance/<int:classPK>/<str:date>',views.attendance,name='attendance-page-date'),
+    # path('save_attendance',views.save_attendance,name='save-attendance'),
+    path('enroll_student',views.enroll_student,name='enroll-student'),
+    
+    path('lecturer/timetable/', views.lecturer_timetable, name='lecturer_timetable'),
+    path('academic_year/new/', views.new_academic_year, name='new-academic-year'),
+    path('course/<str:course_id>/', views.course_detail, name='course_detail'),
+    path('course/<str:course_id>/enroll_students',views.enroll_students_in_course,name='enroll-students'),
+    path('course/<str:course_id>/attendance',views.course_attendance,name='course-atteendance'),
+
 ]

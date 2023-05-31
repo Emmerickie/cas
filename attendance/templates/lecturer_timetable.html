@@ -1,0 +1,24 @@
+<table>
+  <thead>
+    <tr>
+      <th>Day</th>
+      <th>Course</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+      <th>Type</th>
+      <th>Venue</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for schedule in schedules %}
+      <tr>
+        <td>{{ schedule.day }}</td>
+        <td>{{ schedule.course }}</td>
+        <td>{{ schedule.start_time }}</td>
+        <td>{{ schedule.end_time }}</td>
+        <td>{{ schedule.type }}</td>
+        <td>{{ schedule.venue }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
