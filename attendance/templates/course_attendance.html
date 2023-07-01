@@ -32,7 +32,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="d-flex w-100">
-                                    <div class="col-auto pe-2 text-muted">School Year:</div>
+                                    <div class="col-auto pe-2 text-muted">Academic Year:</div>
                                     <div class="col-auto flex-shrink-1 flex-grow-1">
                                         <!-- <p class="m-0 fw-bold">{{ class.school_year }}</p> -->
                                     </div>
@@ -40,15 +40,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="d-flex w-100">
-                                    <div class="col-auto pe-2 text-muted">Level:</div>
-                                    <div class="col-auto flex-shrink-1 flex-grow-1">
-                                        <!-- <p class="m-0 fw-bold">{{ class.level }}</p> -->
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="d-flex w-100">
-                                    <div class="col-auto pe-2 text-muted">Name:</div>
+                                    <div class="col-auto pe-2 text-muted">Course Name:</div>
                                     <div class="col-auto flex-shrink-1 flex-grow-1">
                                         <p class="m-0 fw-bold">{{ course.name }}</p>
                                     </div>
@@ -56,7 +48,15 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="d-flex w-100">
-                                    <div class="col-auto pe-2 text-muted">Lecturer:</div>
+                                    <div class="col-auto pe-2 text-muted">Semester:</div>
+                                    <div class="col-auto flex-shrink-1 flex-grow-1">
+                                        <!-- <p class="m-0 fw-bold">{{ course.name }}</p> -->
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex w-100">
+                                    <!-- <div class="col-auto pe-2 text-muted">Lecturer:</div> -->
                                     <div class="col-auto flex-shrink-1 flex-grow-1">
                                         <!-- <p class="m-0 fw-bold">{{ class.assigned_faculty.user.first_name }} {{ class.assigned_faculty.user.last_name }}</p> -->
                                     </div>
@@ -73,7 +73,7 @@
                             </div>
                         </div>
                     </fieldset>
-                    
+                    <br>
                     <fieldset>
                         <legend>Attendance List</legend>
                         <div class="table-container slider">
@@ -106,8 +106,8 @@
                                     <tr class="">
                                         <td class="text-center">{{ forloop.counter }}</td>
                                         <td style="width: 200px;">{{ student.student_id }}</td>
-                                        <td>{{ student.student.last_name }}, {{ student.student.first_name }} {{ student.student.middle_name }}</td>
-                                        <td>{{ student.student.programme }}</td>
+                                        <td>{{ student.last_name }}, {{ student.first_name }} {{ student.middle_name }}</td>
+                                        <td>{{ student.programme }}</td>
                                         {% for attendance in attendances|dictsort:"date" %}
                                             <td class="text-center attendance-date-column" >
                                                 {% if attendance_dict|get:student and attendance_dict|get:student|get:attendance %}

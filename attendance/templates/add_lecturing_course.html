@@ -3,10 +3,10 @@
     <div class="card card-default rounded-0 shadow ">
         <div class="card-header">
             <div class="d-flex w-100 align-items-center justify-content-between">
-                <h4 class="card-title fw-bold">Course Management</h4>
-                <div class="tools">
+                <h4 class="card-title fw-bold">Add Lecturing Course</h4>
+                <!-- <div class="tools">
                     <button type="button" class="btn btn-primary rounded-0 bg-gradient btn-sm" id='add_new'><a href="{% url 'save-course' %}" style="color: white;"><i class="fa fa-plus"></i><span>Add New</span></a></button>
-                </div>
+                </div> -->
             </div>
         </div>
         <div class="card-body">
@@ -47,16 +47,12 @@
                                 <span class="badge bg-primary rounded-pill px-3">Active</span> {% else %}
                                 <span class="badge bg-secondary rounded-pill px-3">Inactive</span> {% endif %}
                             </td>
-                            <td class="px-2 py-1 align-middle text-center">
-                                <a class="btn btn-outline-info btn-sm view-data" href="{% url 'course-details' course.course_id %}" >
-                                    <i class="fa fa-eye"></i>
-                                </a>
-                                <a class="btn btn-outline-primary btn-sm edit-data" href="javascript:void(0)" data-id="{{ course.pk }}" title="Edit">
-                                    <i class="fa fa-edit"></i>
-                                </a>
-                                <button class="btn btn-outline-danger btn-sm delete-data" type="button" data-id="{{ course.pk }}" title="Delete">
-                                    <i class="fa fa-trash"></i>
-                                </button>
+                            <td>
+                                <form method="POST" action="{% url 'add-lecturing-course' lecturer.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="course_id" value="{{ course.id }}">
+                                    <button type="submit" class="btn btn-primary rounded-0 bg-gradient btn-sm px-3 py-1">ADD</button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}
@@ -66,7 +62,8 @@
         </div>
     </div>
 </div>
-<!-- {% endblock pageContent %} {% block ScriptBlock %}
+{% endblock pageContent %}
+    <!-- {% block ScriptBlock %}
 <script>
     $(function() {
         $('#add_new').click(function() {
@@ -131,4 +128,4 @@
         })
     }
 </script>
-{% endblock ScriptBlock %} -->
+{% endblock ScriptBlock %} --> 

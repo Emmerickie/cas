@@ -1,16 +1,23 @@
 from . import views
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path('redirect-admin', RedirectView.as_view(url="/admin"),name="redirect-admin"),
     path('', views.home, name="home-page"),
+
+    #login
     path('login',auth_views.LoginView.as_view(template_name="login.html",redirect_authenticated_user = True),name='login'),
     path('userlogin', views.login_user, name="login-user"),
+
+    #register
     path('user-register', views.registerUser, name="register-user"),
     path('student-register', views.registerStudent, name="register-student"),
+    path('register_fingerprint', views.registerFingerprint, name="register-fingerprint"),
+    path('register_lecturer_fingerprint', views.registerFingerprintLecturer, name="register-lecturer-fingerprint"),
+    
     path('logout',views.logoutuser,name='logout'),
     path('profile',views.profile,name='profile'),
     path('update-profile',views.update_profile,name='update-profile'),
@@ -26,12 +33,16 @@ urlpatterns = [
     path(r'manage_course/<int:pk>',views.manage_course,name='edit-course-modal'),
     path('save_course',views.save_course,name='save-course'),
     path('delete_course',views.delete_course,name='delete-course'),
-    path('faculty',views.faculty,name='faculty-page'),
-    path('manage_faculty',views.manage_faculty,name='manage-faculty-modal'),
-    path(r'view_faculty/<int:pk>',views.view_faculty,name='view-faculty-modal'),
-    path(r'manage_faculty/<int:pk>',views.manage_faculty,name='edit-faculty-modal'),
-    path('save_faculty',views.save_faculty,name='save-faculty'),
-    path('delete_faculty',views.delete_faculty,name='delete-faculty'),
+
+    path('lecturers',views.lecturers,name='lecturers-page'),
+    path('manage_lecturer',views.manage_lecturer,name='manage-lecturer-modal'),
+    path(r'view_lecturer/<int:pk>',views.view_lecturer,name='view-lecturer-details'),
+    path(r'manage_lecturer/<int:pk>',views.manage_lecturer,name='edit-lecturer-modal'),
+
+
+    path('save_lecturer',views.save_faculty,name='save-lecturer'),
+    path('delete_lecturer/<str:pk>',views.delete_lecturer,name='delete-lecturer'),
+
     path('class',views.classPage,name='class-page'),
     path('manage_class',views.manage_class,name='manage-class-modal'),
     path(r'manage_class/<int:pk>',views.manage_class,name='edit-class-modal'),
@@ -52,11 +63,24 @@ urlpatterns = [
     # path(r'attendance/<int:classPK>/<str:date>',views.attendance,name='attendance-page-date'),
     # path('save_attendance',views.save_attendance,name='save-attendance'),
     path('enroll_student',views.enroll_student,name='enroll-student'),
+
+    # schedules
+    path('view_course_schedule/', views.view_course_schedule, name='view-course-schedule'),
+    path('view_course_schedule/<str:course_id>/schedule', views.course_schedule, name='course-schedule'),
+    path('view_course_schedule/<str:course_id>/schedule/add_schedule', views.add_schedule, name='add-schedule'),
+
     
+    path('add_schedule/', views.add_schedule, name='add-schedule'),
     path('lecturer/timetable/', views.lecturer_timetable, name='lecturer_timetable'),
+    path('lecturer/<str:pk>/courses',views.lecturer_courses,name='lecturer-courses'),
+    path('lecturer/<str:pk>/add_lecturing_course',views.add_lecturing_course,name='add-lecturing-course'),
+    
     path('academic_year/new/', views.new_academic_year, name='new-academic-year'),
-    path('course/<str:course_id>/', views.course_detail, name='course_detail'),
+    path('course/<str:course_id>/', views.course_details, name='course-details'),
     path('course/<str:course_id>/enroll_students',views.enroll_students_in_course,name='enroll-students'),
     path('course/<str:course_id>/attendance',views.course_attendance,name='course-atteendance'),
+    
+
+    # path("add-teaching/", views.add_teaching, name="add-teaching"),
 
 ]

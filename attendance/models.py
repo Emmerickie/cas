@@ -120,10 +120,8 @@ class User(AbstractBaseUser):
     middle_name = models.CharField(max_length=250, blank=True, null= True)
     last_name = models.CharField(max_length=100, null=True)
     gender = models.CharField(max_length=100, choices=[('Male','Male'),('Female','Female')], blank=True, null= True)
-    programme = models.ForeignKey(Programme, to_field='programme_id', on_delete=models.CASCADE, null=True, blank=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, blank=True, null=True)
     contact = models.CharField(max_length=250, blank=True, null= True)
-    year_of_study = models.CharField(choices=YEAR_OF_STUDY_CHOICES, max_length=1, null=True)
 
 
     last_login = models.DateTimeField(auto_now=True)
@@ -251,6 +249,9 @@ class UserProfile(models.Model):
     gender = models.CharField(max_length=100, choices=[('Male','Male'),('Female','Female')], blank=True, null= True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, blank=True, null=True)
 
+    fingerprint_data = models.TextField(blank=True, null=True)
+
+
     def __str__(self):
         return self.user.username
 
@@ -296,8 +297,7 @@ class StudentProfile(models.Model):
         ('Continuing', 'Continuing'),
         ('Completed', 'Completed'),
     )
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='student')
-    student_id = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', on_delete=models.CASCADE)
+    student_id = models.CharField(max_length=13, unique=True)
     course = models.ManyToManyField(Course, through='Enrollment')
     first_name = models.CharField(max_length=250)
     middle_name = models.CharField(max_length=250, blank=True)
@@ -310,6 +310,8 @@ class StudentProfile(models.Model):
     programme = models.ForeignKey(Programme, to_field='programme_id', on_delete=models.CASCADE)
     year_of_study = models.CharField(choices=YEAR_OF_STUDY_CHOICES, max_length=1)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Continuing')
+
+    fingerprint_data = models.TextField(blank=True, null=True)
 
     def __str__(self):
         full_name = self.last_name + ", " + self.first_name
@@ -382,6 +384,9 @@ class Venue(models.Model):
 
     def __str__(self):
         return self.name
+    
+
+
 
 class Schedule(models.Model):
     DAY = (
@@ -430,7 +435,7 @@ class StudentAttendance(models.Model):
     is_present = models.BooleanField(default=False)
 
     def __str__(self):
-        return str(self.attendance) + "  " + self.student.user.username
+        return str(self.attendance) + "  " + str(self.student)
     
 class InstructorAttendance(models.Model):
     attendance = models.ForeignKey(Attendance, on_delete=models.CASCADE)

@@ -1,44 +1,82 @@
-<h2>Register Student</h2>
-<form method="POST">
-    {% csrf_token %}
-    {% for field in register_student_form %}
-        <p>
-            {{field.label_tag}}
-            {{field}}
-            <br>
+{% extends 'base.html' %}
 
-            {% if field.help_text %}
-                <small style="color:black;">{{field.help_text}}</small>
-            {% endif%}
+{% block pageContent %}
+<!-- <style> -->
+<!-- /* body{
+    background: black;
+}
 
-            {% if error in fields.errors %}
-                <p style="color: red;">{{error}}</p>
+.card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: 400px;
+    background-color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-            {% endif %}
-        </p>
+.card-header {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    text-align: center;
+}
 
-
-    {% endfor %}
-    <!-- {% for field in student_profile_form %}
-        <p>
-            {{field.label_tag}}
-            {{field}}
-            <br>
-
-            {% if field.help_text %}
-                <small style="color:black;">{{field.help_text}}</small>
-            {% endif%}
-
-            {% if error in fields.errors %}
-                <p style="color: red;">{{error}}</p>
-
-            {% endif %}
-        </p>
+</style> */ -->
 
 
-    {% endfor %}
-     -->
-    <button type="submit">Register</button>
-
-
-</form>
+    
+<div class="card">
+    <div class="card-header">
+        <h4 class="card-title fw-bold">Register Student</h4>
+    </div>
+    <form method="POST">
+        {% csrf_token %}
+        {% for field in register_student_form %}
+            <p>
+                {{field.label_tag}}
+                {{field}}
+                <br>
+    
+                {% if field.help_text %}
+                    <small style="color:black;">{{field.help_text}}</small>
+                {% endif%}
+    
+                {% if error in fields.errors %}
+                    <p style="color: red;">{{error}}</p>
+    
+                {% endif %}
+            </p>
+    
+    
+        {% endfor %}
+        <!-- {% for field in student_profile_form %}
+            <p>
+                {{field.label_tag}}
+                {{field}}
+                <br>
+    
+                {% if field.help_text %}
+                    <small style="color:black;">{{field.help_text}}</small>
+                {% endif%}
+    
+                {% if error in fields.errors %}
+                    <p style="color: red;">{{error}}</p>
+    
+                {% endif %}
+            </p>
+    
+    
+        {% endfor %}
+        -->
+        <button type="submit">Next</button>
+    
+    
+    </form>
+</div>
+{% endblock %}

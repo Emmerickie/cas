@@ -1,28 +1,28 @@
 <div class="container-fluid">
     <form action=" " id="faculty-form">
         {% csrf_token %}
-        <input type="hidden" name="id" value="{{ faculty.id }}">
+        <input type="hidden" name="id" value="{{ lecturer.id }}">
         <input type="hidden" name="user_type" value="2">
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group mb-3">
                     <label for="first_name" class="control-label">First Name</label>
-                    <input type="text" class="form-control rounded-0" name="first_name" id="first_name" value="{{ faculty.user.first_name }}" required="required">
+                    <input type="text" class="form-control rounded-0" name="first_name" id="first_name" value="{{ lecturer.user.first_name }}" required="required">
                 </div>
                 <div class="form-group mb-3">
                     <label for="last_name" class="control-label">Last Name</label>
-                    <input type="text" class="form-control rounded-0" name="last_name" id="last_name" value="{{ faculty.user.last_name }}" required="required">
+                    <input type="text" class="form-control rounded-0" name="last_name" id="last_name" value="{{ lecturer.user.last_name }}" required="required">
                 </div>
                 <div class="form-group mb-3">
                     <label for="gender" class="control-label">Gender</label>
                     <select name="gender" id="gender" class="form-select rounded-0" required>
-                        {% if faculty.gender == 'Male' %}
+                        {% if lecturer.gender == 'Male' %}
                         <option selected>Male</option>
                         {% else %}
                         <option>Male</option>
                         {% endif %}
                         
-                        {% if faculty.gender == 'Female' %}
+                        {% if lecturer.gender == 'Female' %}
                         <option selected>Female</option>
                         {% else %}
                         <option>Female</option>
@@ -44,7 +44,7 @@
             </div>
             <div class="col-md-6">
                 <div class="form-group mb-3">
-                    <label for="department" class="control-label">Deparmtent</label>
+                    <label for="department" class="control-label">Department</label>
                     <select name="department" id="department" class="form-select rounded-0 select2" required>
                         {% if not faculty.department %}
                         <option disabled selected></option>
@@ -91,69 +91,5 @@
     </form>
 </div>
 <script>
-    function DisplayImage(input) {
-        console.log(input.files)
-        if (event.target.files[0]) {
-            var reader = new FileReader();
-            reader.onload = function() {
-                var output = $('#user-avatar-modal');
-                output.attr('src', reader.result)
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
 
-    };
-    $(function() {
-        $('#uni_modal').on('shown.bs.modal', function() {
-            $('.select2').select2({
-                placeholder: 'Please Select Here',
-                width: '100%',
-                dropdownParent: $('#uni_modal')
-            })
-        })
-        $('#faculty-form').submit(function(e) {
-            e.preventDefault();
-            var _this = $(this)
-            $('.err-msg').remove();
-            var el = $('<div>')
-            el.addClass("alert alert-danger err-msg")
-            el.hide()
-            if (_this[0].checkValidity() == false) {
-                _this[0].reportValidity();
-                return false;
-            }
-            start_loader();
-            $.ajax({
-                url: "{% url 'save-faculty' %}",
-                data: new FormData($(this)[0]),
-                cache: false,
-                contentType: false,
-                processData: false,
-                method: 'POST',
-                type: 'POST',
-                dataType: 'json',
-                error: err => {
-                    console.log(err)
-                    alert("An error occured ", 'error');
-                    end_loader();
-                },
-                success: function(resp) {
-                    if (typeof resp == 'object' && resp.status == 'success') {
-                        el.removeClass("alert alert-danger err-msg ")
-                        location.reload()
-                    } else if (resp.status == 'failed' && !!resp.msg) {
-                        el.html(resp.msg)
-                    } else {
-                        el.text("An error occured ", 'error');
-                        end_loader();
-                        console.err(resp)
-                    }
-                    _this.prepend(el)
-                    el.show('slow')
-                    $("html, body, .modal ").scrollTop(0);
-                    end_loader()
-                }
-            })
-        })
-    })
 </script>

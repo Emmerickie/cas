@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'attendance.apps.AttendanceConfig',
 
-    'django_filters'
+    'django_filters',
 ]
 
 MIDDLEWARE = [

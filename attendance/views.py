@@ -3,6 +3,10 @@ from aiohttp import request
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 
+import requests
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -19,8 +23,9 @@ from ams.settings import MEDIA_ROOT, MEDIA_URL
 from django.core.exceptions import ValidationError
 
 from attendance.models import *
-from attendance.forms import UserRegistration, StudentRegistration, UpdateProfile, UpdateProfileMeta, UpdateProfileAvatar, AddAvatar, SaveDepartment, SaveCourse, SaveProgramme, SaveStudent, SaveClassStudent, UpdatePasswords, UpdateFaculty, StudentProfileForm, EnrollForm, AcademicYearForm, Semester1Form, Semester2Form
+from attendance.forms import *
 
+from .filters import CourseFilter
 deparment_list = Department.objects.exclude(status = 2).all()
 context = {
     'page_title' : 'Simple Blog Site',
@@ -93,18 +98,36 @@ def registerUser(request):
         data = request.POST
         form = UserRegistration(data)
         if form.is_valid():
-            User.is_staff=True
-            user = form.save(commit=False)
-            user.set_password((form.cleaned_data['last_name']).upper())
-            user.save()
-            
-            newUser = User.objects.all().last()
-            try:
-                profile = UserProfile.objects.get(user = newUser)
-            except:
-                profile = None
+            # User.is_staff=True
+            # user = form.save(commit=False)
+            # user.set_password((form.cleaned_data['last_name']).upper())
+            # user.save()
 
-            UserProfile.objects.create(user=user, gender=user.gender, department=user.department)
+            user_info = form.cleaned_data
+
+            request.session['user_info'] = {
+                'email': user_info['email'],
+                'username': user_info['username'],
+                'first_name': user_info['first_name'],
+                'middle_name': user_info['middle_name'],
+                'last_name': user_info['last_name'],
+                'gender': user_info['gender'],
+                'department': user_info['department'].id,
+                'contact': user_info['contact'],
+
+            }
+
+
+            print(user_info)
+            return render(request, 'register_fingerprint_lecturer.html')
+
+            # newUser = User.objects.all().last()
+            # try:
+            #     profile = UserProfile.objects.get(user = newUser)
+            # except:
+            #     profile = None
+
+            # UserProfile.objects.create(user=user, gender=user.gender, department=user.department)
 
             # if profile is None:
             #     if User.is_admin:
@@ -125,6 +148,17 @@ def registerUser(request):
 
     return render(request,'register.html',context)
 
+# def registerFingerprint(request):
+    
+    
+    
+#     context['title'] = "Register Fingerprint"
+
+#     return render(request,'register_fingerprint.html',context)
+
+
+
+
 def registerStudent(request):
     # user = request.user
     # if user.is_authenticated:
@@ -132,20 +166,38 @@ def registerStudent(request):
     context = {}
     context['page_title'] = "Register Student"
     if request.POST:
-        user_form = StudentRegistration(request.POST)
-        student_form = StudentProfileForm(request.POST)
-        if user_form.is_valid():
-            user = user_form.save(commit=False)
-            user.set_password((user_form.cleaned_data['last_name']).upper())
-            user.save()
+        student_form = StudentRegistration(request.POST)
+        if student_form.is_valid():
+            # student = student_form.save(commit=False)
 
-            StudentProfile.objects.create(user=user, programme=user.programme, student_id=user, year_of_study=user.year_of_study)
+            student_info = student_form.cleaned_data
+
+
+            request.session['student_info'] = {
+                'student_id': student_info['student_id'],
+                'first_name': student_info['first_name'],
+                'middle_name': student_info['middle_name'],
+                'last_name': student_info['last_name'],
+                'contact': student_info['contact'],
+                'gender': student_info['gender'],
+                'programme': student_info['programme'].id,  # Store the programme ID instead of the object
+                'year_of_study': student_info['year_of_study'],
+            }
+
+
+            print(student_info)
+            return render(request, 'register_fingerprint.html', {'student_info': student_info})
+
+
+
+
+            # StudentProfile.objects.create(user=user, programme=user.programme, student_id=user, year_of_study=user.year_of_study)
             # student_profile = student_form.save(commit=False)
             # student_profile.user = user
-            # student_profile.student_id = user_form.cleaned_data['username']
-            # student_profile.first_name = user_form.cleaned_data['first_name']
-            # student_profile.middle_name = user_form.cleaned_data['middle_name']
-            # student_profile.last_name = user_form.cleaned_data['last_name']
+            # student_profile.student_id = student_form.cleaned_data['username']
+            # student_profile.first_name = student_form.cleaned_data['first_name']
+            # student_profile.middle_name = student_form.cleaned_data['middle_name']
+            # student_profile.last_name = student_form.cleaned_data['last_name']
                     
             # student_profile.save()
 
@@ -168,12 +220,124 @@ def registerStudent(request):
 
             return redirect('home-page')
     else:
-        user_form = StudentRegistration()
-        student_form = StudentProfileForm()
-    context['register_student_form'] = user_form
-    context['student_profile_form'] = student_form
+        student_form = StudentRegistration()
+    context['register_student_form'] = student_form
 
     return render(request,'register_student.html', context)
+
+# @api_view(['POST'])
+def registerFingerprint(request, *args, **kwargs):
+
+
+
+    endpoint = "http://localhost:8001/api/"
+
+    get_response = requests.get(endpoint)
+
+    print(get_response.status_code)
+    print(get_response.json())
+
+
+
+
+    fingerprint_data = get_response.json()['fingerprint_data']
+
+
+    # if request.method == 'POST':
+    #     fingerprint_data = request.POST.get('fingerprint_data')
+
+    #     # Retrieve the student information from the session
+    student_info = request.session.get('student_info')
+
+    print(student_info)
+
+    #     print(student_info)
+
+        # Fetch the Programme object using the ID
+    programme = Programme.objects.get(id=student_info['programme'])
+
+        # Create a new student record with the provided information and associate the fingerprint data
+
+    student = StudentProfile.objects.create(
+        student_id=student_info['student_id'],
+        first_name=student_info['first_name'],
+        middle_name=student_info['middle_name'],
+        last_name=student_info['last_name'],
+        contact=student_info['contact'],
+        gender=student_info['gender'],
+        programme=programme,
+        year_of_study=student_info['year_of_study'],
+
+        fingerprint_data=fingerprint_data,
+        # Include other student information fields as needed
+    )
+
+    # Clear the session data
+    del request.session['student_info']
+
+    return redirect('home-page')
+
+
+def registerFingerprintLecturer(request, *args, **kwargs):
+
+
+
+    endpoint = "http://localhost:8001/api/"
+
+    get_response = requests.get(endpoint)
+
+    print(get_response.status_code)
+    print(get_response.json())
+
+
+
+
+    fingerprint_data = get_response.json()['fingerprint_data']
+
+
+    # if request.method == 'POST':
+    #     fingerprint_data = request.POST.get('fingerprint_data')
+
+    #     # Retrieve the student information from the session
+    user_info = request.session.get('user_info')
+
+    print(user_info)
+    department = Department.objects.get(id=user_info['department'])
+
+
+    # Create a new user record with the provided information and associate the fingerprint data
+    lecturer = User(
+        email=user_info['email'],
+        username=user_info['username'],
+        first_name=user_info['first_name'],
+        middle_name=user_info['middle_name'],
+        last_name=user_info['last_name'],
+        contact=user_info['contact'],
+        gender=user_info['gender'],
+        department=department,
+        is_staff=True
+
+        # Include other student information fields as needed
+    )
+
+    lecturer.set_password((user_info['last_name']).upper())
+
+    lecturer.save()
+
+    newUser = User.objects.all().last()
+    try:
+        profile = UserProfile.objects.get(user = newUser)
+    except:
+        profile = None
+
+    UserProfile.objects.create(user=lecturer, gender=lecturer.gender, department=lecturer.department, fingerprint_data=fingerprint_data)
+
+
+
+    # Clear the session data
+    del request.session['user_info']
+
+    return redirect('home-page')
 
 
 
@@ -310,12 +474,35 @@ def delete_department(request):
 @login_required
 def course(request):
     courses = Course.objects.all()
-    context['page_title'] = "Course Management"
-    context['courses'] = courses
+
+    courseFilter = CourseFilter(request.GET, queryset=courses)
+    courses = courseFilter.qs
+
+    context = {
+        'page_title': "Course Management",
+        'courses': courses,
+        'course_filter': courseFilter,
+    }
+
     return render(request, 'course_mgt.html',context)
 
 @login_required
-def course_detail(request, course_id):
+def lecturer_courses(request, pk):
+
+    lecturer = UserProfile.objects.get(id = pk)
+    lecturer_courses = Teaching.objects.filter(lecturer=pk)
+
+
+    context = {
+        'page_title': "Course Management",
+        'lecturer_courses': lecturer_courses,
+        'lecturer' : lecturer
+        }
+
+    return render(request, 'lecturer_courses.html',context)
+
+@login_required
+def course_details(request, course_id):
     course = get_object_or_404(Course, course_id=course_id)
     current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
     lecturers = Teaching.objects.filter(course=course)
@@ -330,6 +517,86 @@ def course_detail(request, course_id):
     }
     
     return render(request, 'course_details.html', context)
+
+
+def view_course_schedule(request):
+    courses = Course.objects.all()
+
+    courseFilter = CourseFilter(request.GET, queryset=courses)
+    courses = courseFilter.qs
+
+    context = {
+        'page_title': "View course schedule",
+        'courses': courses,
+        'course_filter': courseFilter,
+    }
+
+    return render(request, 'view_course_schedule.html',context)
+
+def course_schedule(request, course_id):
+
+    course = Course.objects.get(course_id = course_id)
+    
+
+    # Get the schedules for that course
+    schedules = Schedule.objects.filter(course=course)
+
+
+
+    context = {
+        'schedules': schedules,
+        'course' : course
+    }
+
+    return render(request, 'course_schedule.html', context)
+
+
+def add_schedule(request, course_id):
+    course = Course.objects.get(course_id=course_id)
+
+    if request.method == 'POST':
+        form = ScheduleForm(request.POST)
+        if form.is_valid():
+            form.save(commit=False)
+            form.course=course
+            form.save()
+
+            
+
+            schedules = Schedule.objects.filter(course=course)
+
+            current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+            
+
+            for schedule in schedules:
+                course_lecturers = Teaching.objects.filter(course=course)
+
+                for course_lecturer in course_lecturers:
+
+                    
+                    start_date = current_semester.start_date
+                    end_date = current_semester.end_date
+
+                    if start_date <= end_date:
+                        current_date = start_date
+                        while current_date <= end_date:
+                            if current_date.strftime('%A') == schedule.day:
+                                attendance = Attendance.objects.get_or_create(date=current_date, lesson=schedule)
+
+                                InstructorAttendance.objects.get_or_create(attendance=attendance, lecturer=course_lecturer)
+                            current_date += timedelta(days=1)
+                    
+                    
+
+                
+
+                
+            return redirect('course-schedule')  # Replace 'schedule-list' with the URL name of your schedule list view
+    else:
+        form = ScheduleForm()
+    
+    context = {'form': form}
+    return render(request, 'add_schedule.html', context)
 
 @login_required
 def manage_course(request,pk=None):
@@ -348,6 +615,8 @@ def manage_course(request,pk=None):
     context['course'] = course
 
     return render(request, 'manage_course.html',context)
+
+
 
 @login_required
 def save_course(request):
@@ -381,39 +650,39 @@ def delete_course(request):
 
 #Faculty
 @login_required
-def faculty(request):
-    user = UserProfile.objects.filter(user_type = 2).all()
-    context['page_title'] = "Faculty Management"
-    context['faculties'] = user
-    return render(request, 'faculty_mgt.html',context)
+def lecturers(request):
+    lecturers = UserProfile.objects.filter(user_type = 2).all()
+    context['page_title'] = "Lecturers Management"
+    context['lecturers'] = lecturers
+    return render(request, 'lecturers.html',context)
 
 @login_required
-def manage_faculty(request,pk=None):
+def manage_lecturer(request,pk=None):
     if pk == None:
-        faculty = {}
+        lecturer = {}
         department = Department.objects.filter(status=1).all()
     elif pk > 0:
-        faculty = UserProfile.objects.filter(id=pk).first()
-        department = Department.objects.filter(Q(status=1) or Q(id = faculty.id)).all()
+        lecturer = UserProfile.objects.filter(id=pk).first()
+        departments = Department.objects.filter(Q(status=1) or Q(id = lecturer.id)).all()
     else:
-        department = Department.objects.filter(status=1).all()
-        faculty = {}
+        departments = Department.objects.filter(status=1).all()
+        lecturer = {}
     context['page_title'] = "Manage Faculty"
-    context['departments'] = department
-    context['faculty'] = faculty
-    return render(request, 'manage_faculty.html',context)
+    context['departments'] = departments
+    context['lecturer'] = lecturer
+    return render(request, 'manage_lecturer.html',context)
 
 @login_required
-def view_faculty(request,pk=None):
+def view_lecturer(request,pk=None):
     if pk == None:
-        faculty = {}
+        lecturer = {}
     elif pk > 0:
-        faculty = UserProfile.objects.filter(id=pk).first()
+        lecturer = UserProfile.objects.filter(id=pk).first()
     else:
-        faculty = {}
+        lecturer = {}
     context['page_title'] = "Manage Faculty"
-    context['faculty'] = faculty
-    return render(request, 'faculty_details.html',context)
+    context['lecturer'] = lecturer
+    return render(request, 'lecturer_details.html',context)
 
 @login_required
 def save_faculty(request):
@@ -459,18 +728,27 @@ def save_faculty(request):
     return HttpResponse(json.dumps(resp),content_type='application/json')
 
 @login_required
-def delete_faculty(request):
+def delete_lecturer(request, pk):
+    lecturer = get_object_or_404(User, pk=pk)
+
+
     resp={'status' : 'failed', 'msg':''}
     if request.method == 'POST':
         id = request.POST['id']
         try:
-            faculty = User.objects.filter(id = id).first()
-            faculty.delete()
+            lecturer = User.objects.filter(id = id).first()
+            lecturer.delete()
             resp['status'] = 'success'
-            messages.success(request,'Faculty has been deleted successfully.')
+            messages.success(request,'Lecturer has been deleted successfully.')
+            return redirect('lecturers-page')
         except Exception as e:
             raise print(e)
-    return HttpResponse(json.dumps(resp),content_type="application/json")
+    
+    context = {'delete_item' : "Delete Lecturer",
+                'item_type' : "lecturer",
+                'item' : lecturer
+                }
+    return render(request, 'delete.html', context)
 
 
     
@@ -606,6 +884,34 @@ def update_students_year_of_study(self):
                 student.year_of_study = str(new_year_of_study)
 
             student.save()
+
+def add_lecturing_course(request, pk):
+    courses = Course.objects.all()
+
+    courseFilter = CourseFilter(request.GET, queryset=courses)
+    courses = courseFilter.qs
+    
+    lecturer = UserProfile.objects.get(id = pk)
+
+    if request.method == 'POST':
+        course_id = request.POST['course_id']
+        course = Course.objects.get(id=course_id)
+        Teaching.objects.create(lecturer=lecturer, course=course)
+        return redirect('lecturer-courses', pk=lecturer.id)
+    
+
+
+
+
+    context = {
+        'page_title': "Add Lecturing Course",
+        'courses': courses,
+        'course_filter': courseFilter,
+        'lecturer' : lecturer
+    }
+
+    return render(request, 'add_lecturing_course.html',context)
+
 
 
 def enroll_student(request):
@@ -812,6 +1118,13 @@ def delete_student(request):
         except Exception as e:
             raise print(e)
     return HttpResponse(json.dumps(resp),content_type="application/json")
+
+
+# timetable/schedule views
+
+
+
+
 
 
 def lecturer_timetable(request):

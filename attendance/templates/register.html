@@ -1,25 +1,36 @@
-<h2>Register Instructor</h2>
-<form method="POST">
-    {% csrf_token %}
-    {% for field in reg_form %}
-        <p>
-            {{field.label_tag}}
-            {{field}}
-            <br>
+{% extends 'base.html' %}
 
-            {% if field.help_text %}
-                <small style="color:black;">{{field.help_text}}</small>
-            {% endif%}
+{% block pageContent %}
 
-            {% if error in fields.errors %}
-                <p style="color: red;">{{error}}</p>
+    
+<div class="card">
+    <div class="card-header">
+        <h4 class="card-title fw-bold">Register Instructor</h4>
+    </div>
+    <form method="POST">
+        {% csrf_token %}
+        {% for field in reg_form %}
+            <p>
+                {{field.label_tag}}
+                {{field}}
+                <br>
+    
+                {% if field.help_text %}
+                    <small style="color:black;">{{field.help_text}}</small>
+                {% endif%}
+    
+                {% if error in fields.errors %}
+                    <p style="color: red;">{{error}}</p>
+    
+                {% endif %}
+            </p>
+    
+    
+        {% endfor %}
+        <button type="submit">Register</button>
+    
+    
+    </form>
+</div>
+{% endblock %}
 
-            {% endif %}
-        </p>
-
-
-    {% endfor %}
-    <button type="submit">Register</button>
-
-
-</form>

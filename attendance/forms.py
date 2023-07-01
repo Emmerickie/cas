@@ -7,7 +7,8 @@ from django.contrib.auth.forms import UserCreationForm,PasswordChangeForm, UserC
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
 from django.contrib.auth.models import User
-from attendance.models import Enrollment, UserProfile, Department, Course, StudentProfile, Programme, User, AcademicTerm, Semester
+from attendance.models import *
+
 
 class UserRegistration(UserCreationForm):
     email = forms.EmailField(max_length=250,help_text="The email field is required.")
@@ -52,7 +53,7 @@ class UserRegistration(UserCreationForm):
             return username
         raise forms.ValidationError(f"The {user.username} already exists")
 
-class StudentRegistration(UserCreationForm):
+class StudentRegistration(forms.ModelForm):
     # email = forms.EmailField(max_length=250,help_text="The email field is required.")
     # first_name = forms.CharField(max_length=250,help_text="The First Name field is required.")
     # last_name = forms.CharField(max_length=250,help_text="The Last Name field is required.")
@@ -62,15 +63,15 @@ class StudentRegistration(UserCreationForm):
     # programme = forms.ModelChoiceField(queryset=Programme.objects.all())
 
     class Meta:
-        model = User
-        fields = ('email', 'username', 'first_name', 'middle_name', 'last_name', 'gender', 'programme', 'year_of_study', 'contact')
+        model = StudentProfile
+        fields = ('student_id', 'first_name', 'middle_name', 'last_name', 'gender', 'programme', 'year_of_study', 'contact')
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].required = True
-        self.fields['password1'].required = False
-        self.fields['password2'].required = False
-        self.fields['email'].widget.attrs.update({'class': 'form-control'})
+        self.fields['student_id'].required = True
+        # self.fields['password1'].required = False
+        # self.fields['password2'].required = False
+        # self.fields['email'].widget.attrs.update({'class': 'form-control'})
         self.fields['first_name'].widget.attrs.update({'class': 'form-control'})
         self.fields['middle_name'].widget.attrs.update({'class': 'form-control'})
         self.fields['last_name'].widget.attrs.update({'class': 'form-control'})
@@ -88,13 +89,13 @@ class StudentRegistration(UserCreationForm):
             return email
         raise forms.ValidationError(f"The {user.email} already exists/taken")
 
-    def clean_username(self):
-        username = self.cleaned_data['username']
+    def clean_student_id(self):
+        student_id = self.cleaned_data['student_id']
         try:
-            user = User.objects.get(username = username)
+            student = User.objects.get(student_id = student_id)
         except Exception as e:
-            return username
-        raise forms.ValidationError(f"The {user.username} already exists")
+            return student_id
+        raise forms.ValidationError(f"The {student.student_id} already exists")
     
     # def save(self, commit=True):
     #     # user_id = self.cleaned_data.get('user_id')
@@ -153,6 +154,23 @@ class Semester2Form(forms.ModelForm):
             'end_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
+
+# class AddTeachingForm(forms.ModelForm):
+#     # course = forms.ModelChoiceField(queryset=Course.objects.all(), widget=dal.ModelSelect2(url='course-autocomplete'),
+#     # )
+#     class Meta:
+#         model = Teaching
+#         fields = ["course"]
+
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.fields['course'].widget.attrs['class'] = add_class(self.fields['course'].widget.attrs.get('class', ''), 'form-control')
+
+
+class ScheduleForm(forms.ModelForm):
+    class Meta:
+        model = Schedule
+        fields = ['day', 'start_time', 'end_time', 'type', 'venue']
 
 
 
