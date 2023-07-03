@@ -72,7 +72,7 @@ urlpatterns = [
     
     path('add_schedule/', views.add_schedule, name='add-schedule'),
     path('lecturer/timetable/', views.lecturer_timetable, name='lecturer_timetable'),
-    path('lecturer/<str:pk>/courses',views.lecturer_courses,name='lecturer-courses'),
+    path('lecturer/<str:pk>/courses',views.lecturer_courses,name='courses-page'),
     path('lecturer/<str:pk>/add_lecturing_course',views.add_lecturing_course,name='add-lecturing-course'),
     
     path('academic_year/new/', views.new_academic_year, name='new-academic-year'),
@@ -82,5 +82,10 @@ urlpatterns = [
     
 
     # path("add-teaching/", views.add_teaching, name="add-teaching"),
+
+    #attendance
+    path('student_attendance',views.student_attendance,name='student-attendance'),
+
+
 
 ]

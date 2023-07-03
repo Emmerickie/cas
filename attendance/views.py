@@ -228,9 +228,18 @@ def registerStudent(request):
 # @api_view(['POST'])
 def registerFingerprint(request, *args, **kwargs):
 
+    
+
+    
+    # endpoint = "http://172.20.10.3:8000/api/interrupt_loop"
+
+    # get_response = requests.get(endpoint)
+
+    # print(get_response.json())
+
+    endpoint = "http://172.20.10.3:8000/api/"
 
 
-    endpoint = "http://localhost:8001/api/"
 
     get_response = requests.get(endpoint)
 
@@ -897,6 +906,32 @@ def add_lecturing_course(request, pk):
         course_id = request.POST['course_id']
         course = Course.objects.get(id=course_id)
         Teaching.objects.create(lecturer=lecturer, course=course)
+        
+
+        # create attendances for the new course to be taught by the lecturer
+        schedules = Schedule.objects.filter(course=course)
+
+        current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+        
+
+        for schedule in schedules:
+            course_lecturers = Teaching.objects.filter(course=course)
+
+            for course_lecturer in course_lecturers:
+
+                
+                start_date = current_semester.start_date
+                end_date = current_semester.end_date
+
+                if start_date <= end_date:
+                    current_date = start_date
+                    while current_date <= end_date:
+                        if current_date.strftime('%A') == schedule.day:
+                            attendance = Attendance.objects.get_or_create(date=current_date, lesson=schedule)
+
+                            InstructorAttendance.objects.get_or_create(attendance=attendance, lecturer=course_lecturer)
+                        current_date += timedelta(days=1)
+
         return redirect('lecturer-courses', pk=lecturer.id)
     
 
@@ -1155,29 +1190,62 @@ def attendance_class(request):
     return render(request, 'attendance_class.html',context)
 
 
-@login_required
-def student_attendance(request):
-    # Get the current date and time
-    # Implement your fingerprint recognition logic to retrieve the user's fingerprint data
+@api_view(['POST'])
+def student_attendance(request, *args, **kwargs):
 
-    # Find the current course based on the schedule
-    current_course = Schedule.objects.filter(start_time__lte=current_time, end_time__gte=current_time).first()
 
-    # Check if the student is enrolled in the current course
-    enrolled = Enrollment.objects.filter(student=request.user.student, course=current_course.course).exists()
+    data = request.data
 
-    # Check if the course is an elective for the student's programme
-    elective = ProgrammeCourse.objects.filter(programme=request.user.student.programme, level = request.user.student.year_of_study, course=current_course.course, course_type='E').exists()
+    print(data)
 
-    if not enrolled and elective:
-        # Add the student to enrollment
-        Enrollment.objects.create(student=request.user.student, course=current_course.course)
 
-    # Record the student's attendance  ?  ,created
-    attendance = Attendance.objects.get_or_create(lesson=current_course, date=current_date)
-    StudentAttendance.objects.create(lesson=attendance, student=request.user.student, time=current_time)
+    data = json.dumps(data)
+    print(data)
 
-    return HttpResponse("Attendance recorded successfully!")
+    data = json.loads(data)
+    print(data)
+
+    fingerprint_data = data['fingerprint_data']
+
+    student = StudentProfile.objects.get(fingerprint_data=fingerprint_data)
+
+    if student:
+        print("success")
+        return Response({"message": "Attendance Taken"})
+        
+
+
+
+    else:
+        return Response("not successful")
+
+        
+    # student = StudentProfile.objects.get(fingerprint_data = fingerprint_data)
+
+    # if student:
+
+
+
+    # # Get the current date and time
+    # # Implement your fingerprint recognition logic to retrieve the user's fingerprint data
+
+    # # Find the current course based on the schedule
+    # current_course = Schedule.objects.filter(start_time__lte=current_time, end_time__gte=current_time).first()
+
+    # # Check if the student is enrolled in the current course
+    # enrolled = Enrollment.objects.filter(student=request.user.student, course=current_course.course).exists()
+
+    # # Check if the course is an elective for the student's programme
+    # elective = ProgrammeCourse.objects.filter(programme=request.user.student.programme, level = request.user.student.year_of_study, course=current_course.course, course_type='E').exists()
+
+    # if not enrolled and elective:
+    #     # Add the student to enrollment
+    #     Enrollment.objects.create(student=request.user.student, course=current_course.course)
+
+    # # Record the student's attendance  ?  ,created
+    # attendance = Attendance.objects.get_or_create(lesson=current_course, date=current_date)
+    # StudentAttendance.objects.create(lesson=attendance, student=request.user.student, time=current_time)
+
 
 @login_required
 def lecturer_attendance(request):
