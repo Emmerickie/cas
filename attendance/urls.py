@@ -105,6 +105,11 @@ urlpatterns = [
     #attendance
     path('student_attendance',views.student_attendance,name='student-attendance'),
 
+    #report
+    path('course/<str:course_id>/report/printable/', views.attendance_report_printable, name='attendance-report-printable'),
+
+
+
 
 
 ]

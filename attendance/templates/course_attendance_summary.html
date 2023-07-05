@@ -18,6 +18,18 @@
     }
 </style>
 
+<style>
+    .table-lines {
+      border-collapse: collapse;
+    }
+    
+    .table-lines th,
+    .table-lines td {
+      border: 1px solid black;
+      padding: 8px;
+    }
+  </style>
+
 
 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
     <div class="card card-default rounded-0 shadow ">
@@ -25,7 +37,7 @@
             <div class="d-flex w-100 align-items-center justify-content-between">
                 <h4 class="card-title fw-bold">{{course.course_id}} Attendance</h4>
                 <div class="tools">
-                    <button type="button" class="btn btn-defualt border rounded-0 bg-gradient btn-sm" id='print_attendance_report'><i class="fa fa-print"></i> Print Attendance Report</button>
+                    <button type="button" class="btn btn-defualt border rounded-0 bg-gradient btn-sm" id='print_attendance_report'><a href="{% url 'attendance-report-printable' course.course_id %}" target="_blank"><i class="fa fa-print"></i> Print Attendance Report</a></button>
                 </div>
             </div>
         </div>
@@ -92,28 +104,34 @@
                     <fieldset>
                         <legend>Attendance List</legend>
                         <div class="table-container slider">
-                            <table class="table tables-bordered table-container" id="student-list">
+                            <table class="table tables-bordered table-container table-lines" id="student-list">
+                                <colgroup>
+                                    <col width="5%">
+                                    <col width="20%">
+                                    <col width="30%">
+                                    <!-- <col width="10%"> -->
+                                </colgroup>
                                 <thead>
                                     <tr>
-                                        <th class="text-ceter">#</th>
+                                        <th class="text-center">#</th>
                                         <th class="text-center">Student ID</th>
                                         <th class="text-center">Student Name</th>
-                                        <th class="text-ceter">Programme</th>
+                                        <th class="text-center">Programme</th>
                                         <!-- {% for attendance in attendances|dictsort_by_date %}
                                             <th class="attendance-date-column">{{ attendance.date }}</th>
                                         {% endfor %} -->
-                                        <th class="text-ceter">Present/Total</th>
-                                        <th class="text-ceter">% Presence </th>
-                                        <th class="text-ceter">Remarks </th>
+                                        <th class="text-center">Present/Total</th>
+                                        <th class="text-center">% Presence </th>
+                                        <th class="text-center">Remarks </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for student in students %}
-                                    <tr class="">
+                                    <tr>
                                         <td class="text-center">{{ forloop.counter }}</td>
-                                        <td>{{ student.student_id }}</td>
-                                        <td>{{ student.last_name }}, {{ student.first_name }} {{ student.middle_name }}</td>
-                                        <td>{{ student.programme }}</td>
+                                        <td class="text-center">{{ student.student_id }}</td>
+                                        <td class="text-center">{{ student.last_name }}, {{ student.first_name }}</td>
+                                        <td class="text-center">{{ student.programme }}</td>
                                         <!-- {% for attendance in attendances|dictsort:"date" %}
                                             <td class="text-center attendance-date-column" >
                                                 {% if attendance_dict|get:student and attendance_dict|get:student|get:attendance %}
@@ -143,11 +161,6 @@
                                 </tbody>
                             </table>
                         </div>
-
-                        <!-- <div class="clear-fix py-3"></div>
-                        <center>
-                            <button class="btn btn-sm btn-primary rounded-0 bg-gradient"><i class="fa fa-save"></i> Save</button>
-                        </center> -->
                     </fieldset>
                     
                 </div>
@@ -156,3 +169,12 @@
     </div>
 </div>
 {% endblock pageContent %} 
+
+<script>
+    // JavaScript code to handle the print button click event
+    document.getElementById('print-button').addEventListener('click', function() {
+        // Open the printable version of the attendance report in a new window
+        var printableUrl = "{% url 'attendance_report_printable' course_id=course.course_id %}";
+        var newWindow = window.open(printableUrl, '_blank');
+    });
+</script>

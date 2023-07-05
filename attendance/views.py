@@ -1689,3 +1689,88 @@ def course_attendance_summary(request, course_id):
 #         resp['status'] = 'success'
 #         messages.success(request,"Attendance has been saved successfully.")
 #     return HttpResponse(json.dumps(resp),content_type="application/json")
+
+
+
+
+#######Report
+from django.http import HttpResponse
+from django.template.loader import get_template
+from django.template import Context
+from django.conf import settings
+from xhtml2pdf import pisa
+from io import BytesIO
+
+def attendance_report_printable(request, course_id):
+    # Retrieve the course and attendance data
+    course = get_object_or_404(Course, course_id=course_id)
+    # ... Retrieve other data needed for the attendance report ...
+
+    # Render the printable template with the attendance data
+    template = get_template('course_attendance_summary.html')
+    schedules = Schedule.objects.filter(course=course)
+
+
+
+    if len(schedules) == 0:
+        # No schedules found for the course
+        return render(request, 'no_schedule.html', {'course': course})
+    
+    current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+
+    
+    current_date = timezone.now().date()
+    students = StudentProfile.objects.filter(enrollment__course=course).distinct()
+    attendances = Attendance.objects.filter(lesson__in=schedules, date__lte=current_date)
+
+    # Fetch student attendances for the given course and attendance dates
+    student_attendances = StudentAttendance.objects.filter(
+        attendance__in=attendances,
+        student__in=students
+    )
+
+    # Create a dictionary to store student attendances indexed by student and attendance date
+    attendance_dict = {}
+    for student_attendance in student_attendances:
+        attendance_dict.setdefault(student_attendance.student, {})[student_attendance.attendance] = student_attendance.is_present
+
+    for student in students:
+        present_count = sum(1 for attendance in attendances if attendance_dict.get(student, {}).get(attendance))
+        student.total_lessons = attendances.count()
+        student.present_lessons = present_count
+        student.percentage = (present_count / attendances.count()) * 100 if attendances.count() > 0 else 0
+
+    for student in students:
+        if student.percentage >= 75:
+            student.remarks = 'Good Attendance'
+        else:
+            student.remarks = 'Poor Attendance'
+
+    context = {
+        'course': course,
+        'students': students,
+        'attendances': attendances,
+        'attendance_dict': attendance_dict,
+        'current_semester': current_semester,
+        'total_lessons': attendances.count(),
+
+    }
+    html = template.render(context)
+
+    # Generate a PDF file from the HTML content
+    pdf_file = generate_pdf(html)
+
+    # Prepare the response with the PDF file
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{course.name}_Attendance_Report.pdf"'
+    response.write(pdf_file)
+
+    return response
+
+def generate_pdf(html):
+    # Create a PDF file from the HTML content
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result, encoding='UTF-8')
+    if not pdf.err:
+        return result.getvalue()
+    return None
