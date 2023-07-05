@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'attendance.apps.AttendanceConfig',
-
+    'rest_framework',
     'django_filters',
 ]
 

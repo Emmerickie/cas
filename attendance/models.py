@@ -277,8 +277,13 @@ class Teaching(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     date_registered = models.DateField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('lecturer', 'course')
+
+
     def __str__(self):
         return f"{self.lecturer} {self.course}"
+        
 
 
 
@@ -311,7 +316,7 @@ class StudentProfile(models.Model):
     year_of_study = models.CharField(choices=YEAR_OF_STUDY_CHOICES, max_length=1)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Continuing')
 
-    fingerprint_data = models.TextField(blank=True, null=True)
+    fingerprint_data = models.TextField(unique=True)
 
     def __str__(self):
         full_name = self.last_name + ", " + self.first_name
@@ -405,8 +410,16 @@ class Schedule(models.Model):
     end_time = models.TimeField()
     type = models.CharField(max_length=200, choices=[('1','Lecture'),('2','Practical'),('3','Tutorial')])
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE)
+
+
+    class Meta:
+        unique_together = ('day', 'course', 'start_time', 'end_time', 'venue')
+
+
     def __str__(self):
         return f"{self.day} {self.course}"
+    
+
 
 
     

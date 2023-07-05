@@ -3,51 +3,45 @@
     <div class="card card-default rounded-0 shadow ">
         <div class="card-header">
             <div class="d-flex w-100 align-items-center justify-content-between">
-                <h4 class="card-title fw-bold">Student Management</h4>
-                <div class="tools">
-                    <button type="button" class="btn btn-primary rounded-0 bg-gradient btn-sm" id='add_new'><i class="fa fa-plus"></i><a href="{% url 'register-student' %}" style="color: white;">Add New</a></button>
-                </div>
+                <h4 class="card-title fw-bold">View Course Attendances</h4>
+                <!-- <div class="tools">
+                    <button type="button" class="btn btn-primary rounded-0 bg-gradient btn-sm" id='add_new'><a href="{% url 'save-course' %}" style="color: white;"><i class="fa fa-plus"></i><span>Add New</span></a></button>
+                </div> -->
             </div>
         </div>
         <div class="card-body">
             <div class="container-fluid">
-
-                <table class="table table-bordered" id="student-list">
+                <form method="GET">
+                    
+                    {{course_filter.form}}
+                    <button class="btn btn-primary"     type="submit">Search Course</button>
+                </form>
+                <table class="table table-bordered" id="course-list">
                     <colgroup>
                         <col width="5%">
-                        <col width="25%">
-                        <col width="25%">
-                        <col width="25%">
                         <col width="20%">
+                        <col width="50%">
+                        <col width="25%">
+                        
                     </colgroup>
                     <thead>
                         <tr class="bg-gradient bg-primary bg-opacity-50 text-light">
                             <th class="px-2 py-2 text-center">#</th>
-                            <th class="px-2 py-2 text-center">Student ID</th>
-                            <th class="px-2 py-2 text-center">Programme</th>
+                            <th class="px-2 py-2 text-center">Course</th>
                             <th class="px-2 py-2 text-center">Name</th>
                             <th class="px-2 py-2 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for student in students %}
+                        {% for course in courses %}
                         <tr>
-                            <td class="px-2 py-1 align-middle">{{ student.id }}</td>
-                            <td class="px-2 py-1 align-middle">{{ student.student_id }}</td>
-                            <td class="px-2 py-1 align-middle">{{ student.programme }}</td>
-                            <td class="px-2 py-1 align-middle">{{ student.last_name }}, {{ student.first_name }} {{ student.middle_name }}</td>
+                            <td class="px-2 py-1 align-middle">{{ course.id }}</td>
+                            <td class="px-2 py-1 align-middle">{{ course.course_id }}</td>
+                            <td class="px-2 py-1 align-middle">{{ course.name }}</td>
                             <td class="px-2 py-1 align-middle text-center">
-                                <a class="btn btn-outline-info btn-sm view-data" href="javascript:void(0)" data-url="{% url 'view-student-modal' student.pk %}" title="View Details">
+                                <a class="btn btn-outline-info btn-sm view-data" href="{% url 'course-attendance' course.course_id %}" >
                                     <i class="fa fa-eye"></i>
                                 </a>
-                                {% if user.profile.user_type == 1 %}
-                                <a class="btn btn-outline-primary btn-sm edit-data" href="javascript:void(0)" data-id="{{ student.user.pk }}" title="Edit">
-                                    <i class="fa fa-edit"></i>
-                                </a>
-                                <button class="btn btn-outline-danger btn-sm delete-data" type="button" data-id="{{ student.user.pk }}" title="Delete">
-                                    <i class="fa fa-trash"></i>
-                                </button>
-                                {% endif  %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -57,23 +51,20 @@
         </div>
     </div>
 </div>
-{% endblock pageContent %} {% block ScriptBlock %}
-<!-- <script>
+<!-- {% endblock pageContent %} {% block ScriptBlock %}
+<script>
     $(function() {
         $('#add_new').click(function() {
-            uni_modal('<i class="fa fa-plus"></i> Add Student', '{% url "manage-student-modal" %}', 'modal-lg')
-        })
-        $('.view-data').click(function() {
-            uni_modal('<i class="fa fa-eye"></i> Student Details', $(this).attr('data-url'))
+            uni_modal('<i class="fa fa-plus"></i> Add Course', '{% url "manage-course-modal" %}', 'modal-md')
         })
         $('.edit-data').click(function() {
-            uni_modal('<i class="fa fa-edit"></i> Edit Student', '{% url "manage-student-modal" %}/' + $(this).attr('data-id'), 'modal-lg')
+            uni_modal('<i class="fa fa-edit"></i> Edit Course', '{% url "manage-course-modal" %}/' + $(this).attr('data-id'), 'modal-md')
         })
         $('.delete-data').click(function() {
-            _conf("Are you sure to delete this Student permanently?", "delete_student", [$(this).attr('data-id')])
+            _conf("Are you sure to delete this course permanently?", "delete_course", [$(this).attr('data-id')])
         })
 
-        $('#student-list').DataTable({
+        $('#course-list').DataTable({
             columnDefs: [{
                 orderable: false,
                 targets: 4
@@ -87,7 +78,7 @@
         })
     })
 
-    function delete_student($id) {
+    function delete_course($id) {
         start_loader();
         var _this = $(this)
         $('.err-msg').remove();
@@ -95,7 +86,7 @@
         el.addClass("alert alert-danger err-msg")
         el.hide()
         $.ajax({
-            url: '{% url "delete-student" %}',
+            url: '{% url "delete-course" %}',
             headers: {
                 'X-CSRFToken': "{{csrf_token}}"
             },
@@ -124,5 +115,5 @@
             }
         })
     }
-</script> -->
-{% endblock ScriptBlock %}
+</script>
+{% endblock ScriptBlock %} -->

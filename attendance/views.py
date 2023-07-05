@@ -283,8 +283,10 @@ def registerFingerprint(request, *args, **kwargs):
 
     # Clear the session data
     del request.session['student_info']
-
-    return redirect('home-page')
+    student_id = student.student_id
+    success_message = f"The student {student_id} was added successfully"
+    messages.success(request, success_message)
+    return redirect('student-page')
 
 
 def registerFingerprintLecturer(request, *args, **kwargs):
@@ -481,7 +483,7 @@ def delete_department(request):
 
 #Course
 @login_required
-def course(request):
+def courses(request):
     courses = Course.objects.all()
 
     courseFilter = CourseFilter(request.GET, queryset=courses)
@@ -499,6 +501,7 @@ def course(request):
 def lecturer_courses(request, pk):
 
     lecturer = UserProfile.objects.get(id = pk)
+    
     lecturer_courses = Teaching.objects.filter(lecturer=pk)
 
 
@@ -527,9 +530,32 @@ def course_details(request, course_id):
     
     return render(request, 'course_details.html', context)
 
+@login_required
+def course_details(request, course_id):
+    course = get_object_or_404(Course, course_id=course_id)
+    current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+    lecturers = Teaching.objects.filter(course=course)
+    programmes = ProgrammeCourse.objects.filter(course=course)
+    students = Enrollment.objects.filter(course=course, semester=current_semester)
+    context = { 
+        'course': course,
+        'current_semester': current_semester,
+        'programmes': programmes,
+        'lecturers': lecturers,
+        'students':students
+    }
+    
+    return render(request, 'course_details.html', context)
+
+
 
 def view_course_schedule(request):
-    courses = Course.objects.all()
+    if request.user.profile.user_type == 1:
+        courses = Course.objects.all()
+    else:
+        courses_lecturing = Teaching.objects.filter(lecturer=request.user.profile)
+        course_ids = [course.course.id for course in courses_lecturing]
+        courses = Course.objects.filter(id__in=course_ids)
 
     courseFilter = CourseFilter(request.GET, queryset=courses)
     courses = courseFilter.qs
@@ -540,7 +566,31 @@ def view_course_schedule(request):
         'course_filter': courseFilter,
     }
 
-    return render(request, 'view_course_schedule.html',context)
+    return render(request, 'view_course_schedule.html', context)
+
+
+
+def view_course_attendances(request):
+    if request.user.profile.user_type == 1:
+        courses = Course.objects.all()
+    else:
+        courses_lecturing = Teaching.objects.filter(lecturer=request.user.profile)
+        course_ids = [course.course.id for course in courses_lecturing]
+        courses = Course.objects.filter(id__in=course_ids)
+
+    courseFilter = CourseFilter(request.GET, queryset=courses)
+    courses = courseFilter.qs
+
+    context = {
+        'page_title': "View course schedule",
+        'courses': courses,
+        'course_filter': courseFilter,
+    }
+
+    return render(request, 'view_course_attendances.html', context)
+
+
+
 
 def course_schedule(request, course_id):
 
@@ -560,51 +610,103 @@ def course_schedule(request, course_id):
     return render(request, 'course_schedule.html', context)
 
 
+from django.core.exceptions import ObjectDoesNotExist
+
+
 def add_schedule(request, course_id):
     course = Course.objects.get(course_id=course_id)
 
     if request.method == 'POST':
         form = ScheduleForm(request.POST)
         if form.is_valid():
-            form.save(commit=False)
-            form.course=course
-            form.save()
+            courseSchedule=form.save(commit=False)
+            courseSchedule.course=course
+            print(form.data)
+            courseSchedule.save()
 
             
 
-            schedules = Schedule.objects.filter(course=course)
+            schedule= Schedule.objects.filter(course=course).last()
 
             current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
             
 
-            for schedule in schedules:
-                course_lecturers = Teaching.objects.filter(course=course)
+            course_lecturers = Teaching.objects.filter(course=course)
 
-                for course_lecturer in course_lecturers:
+            for course_lecturer in course_lecturers:
+
+                
+                start_date = current_semester.start_date
+                end_date = current_semester.end_date
+
+                if start_date <= end_date:
+                    current_date = start_date
+                    while current_date <= end_date:
+                        if current_date.strftime('%A') == schedule.day:
+                            try:
+                                attendance = Attendance.objects.get(date=current_date, lesson=schedule)
+                            except ObjectDoesNotExist:
+                                attendance = Attendance.objects.create(date=current_date, lesson=schedule)
+
+                            InstructorAttendance.objects.get_or_create(attendance=attendance, lecturer=course_lecturer.lecturer)
+                        current_date += timedelta(days=1)
+
+                
+        ####for students
+            # eligible_programmes = ProgrammeCourse.objects.filter(course=course, semester=current_semester.semester, status='C')
+            # if eligible_programmes.exists():
+            #     for eligible_programme in eligible_programmes:
+            #         level = eligible_programme.level
+            #         # Enroll students who have the course as a core, matching level, status as Continuing, and program status as Core
+            #         students = StudentProfile.objects.filter(programme=eligible_programme.programme, year_of_study=level, status='Continuing')
+                    
+            #         for student in students:
+            #             # Enroll the student in the course for the current semester
+            #             try:
+            #                 Enrollment.objects.get(student=student, course=course, semester=current_semester)
+            #             except ObjectDoesNotExist:
+            #                 Enrollment.objects.create(student=student, course=course, semester=current_semester)
+
+            #             # initialize the attendance which may we should put it to when schedule is created or modified
+            #         current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+            #         course = get_object_or_404(Course, course_id=course_id)
+
+
+            #         schedule_lesson = Schedule.objects.filter(course=course).last()
 
                     
-                    start_date = current_semester.start_date
-                    end_date = current_semester.end_date
-
-                    if start_date <= end_date:
-                        current_date = start_date
-                        while current_date <= end_date:
-                            if current_date.strftime('%A') == schedule.day:
-                                attendance = Attendance.objects.get_or_create(date=current_date, lesson=schedule)
-
-                                InstructorAttendance.objects.get_or_create(attendance=attendance, lecturer=course_lecturer)
-                            current_date += timedelta(days=1)
                     
+            #         start_date = current_semester.start_date
+            #         end_date = current_semester.end_date
+
+            #         if start_date <= end_date:
+            #             current_date = start_date
+            #             while current_date <= end_date:
+            #                 if current_date.strftime('%A') == schedule_lesson.day:
+            #                     try:
+            #                         attendance = Attendance.objects.get(date=current_date, lesson=schedule_lesson)
+            #                     except ObjectDoesNotExist:
+            #                         attendance = Attendance.objects.create(date=current_date, lesson=schedule_lesson)
+
+            #                     eligible_students = Enrollment.objects.filter(course=course, semester=current_semester)
+            #                     for student in eligible_students:
+            #                         StudentAttendance.objects.get_or_create(attendance=attendance, student_id=student.student.id)
+            #                 current_date += timedelta(days=1)
+
+
+                        
+                        
+
                     
 
                 
-
-                
-            return redirect('course-schedule')  # Replace 'schedule-list' with the URL name of your schedule list view
+            return redirect('course-schedule', course.course_id)  # Replace 'schedule-list' with the URL name of your schedule list view
     else:
         form = ScheduleForm()
     
-    context = {'form': form}
+    context = {'form': form,
+            'course_id': course.course_id}
+
     return render(request, 'add_schedule.html', context)
 
 @login_required
@@ -763,7 +865,7 @@ def delete_lecturer(request, pk):
     
 #Class
 @login_required
-def classPage(request):
+def programmes(request):
     if request.user.profile.user_type == 1:
         programmes = Programme.objects.all()
     else:
@@ -771,7 +873,7 @@ def classPage(request):
 
     context['page_title'] = "Programme Management"
     context['programmes'] = programmes
-    return render(request, 'class_mgt.html',context)
+    return render(request, 'programmes_mgt.html',context)
 
 @login_required
 def manage_class(request,pk=None):
@@ -905,19 +1007,17 @@ def add_lecturing_course(request, pk):
     if request.method == 'POST':
         course_id = request.POST['course_id']
         course = Course.objects.get(id=course_id)
-        Teaching.objects.create(lecturer=lecturer, course=course)
+        course_lecturer, created = Teaching.objects.get_or_create(lecturer=lecturer, course=course.id)
         
 
         # create attendances for the new course to be taught by the lecturer
-        schedules = Schedule.objects.filter(course=course)
+        schedules = Schedule.objects.filter(course=course.id)
 
         current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
         
 
         for schedule in schedules:
-            course_lecturers = Teaching.objects.filter(course=course)
-
-            for course_lecturer in course_lecturers:
+            # course_lecturers = Teaching.objects.filter(course=course.id)
 
                 
                 start_date = current_semester.start_date
@@ -927,12 +1027,12 @@ def add_lecturing_course(request, pk):
                     current_date = start_date
                     while current_date <= end_date:
                         if current_date.strftime('%A') == schedule.day:
-                            attendance = Attendance.objects.get_or_create(date=current_date, lesson=schedule)
+                            attendance, created = Attendance.objects.get_or_create(date=current_date, lesson=schedule)
 
-                            InstructorAttendance.objects.get_or_create(attendance=attendance, lecturer=course_lecturer)
+                            InstructorAttendance.objects.get_or_create(attendance=attendance, lecturer=course_lecturer.lecturer)
                         current_date += timedelta(days=1)
 
-        return redirect('lecturer-courses', pk=lecturer.id)
+        return redirect('lecturer-courses-page', pk=lecturer.id)
     
 
 
@@ -949,24 +1049,24 @@ def add_lecturing_course(request, pk):
 
 
 
-def enroll_student(request):
-    context = {}
-    if request.method == 'POST':
-        form = EnrollForm(request.POST)
-        if form.is_valid():
-            student = form.cleaned_data['student']
-            course = form.cleaned_data['course']
-            enrollment, created = Enrollment.objects.get_or_create(student=student, course=course)
-            if created:
-                # If a new enrollment was created
-                return redirect('enrollment_success')
-            else:
-                # If the enrollment already exists
-                form.add_error(None, 'This student is already enrolled in this course.')
-    else:
-        form = EnrollForm()
-        context['enroll_form'] = form
-    return render(request, 'enroll_student.html', context)
+# def enroll_student(request):
+#     context = {}
+#     if request.method == 'POST':
+#         form = EnrollForm(request.POST)
+#         if form.is_valid():
+#             student = form.cleaned_data['student']
+#             course = form.cleaned_data['course']
+#             enrollment, created = Enrollment.objects.get_or_create(student=student, course=course)
+#             if created:
+#                 # If a new enrollment was created
+#                 return redirect('enrollment_success')
+#             else:
+#                 # If the enrollment already exists
+#                 form.add_error(None, 'This student is already enrolled in this course.')
+#     else:
+#         form = EnrollForm()
+#         context['enroll_form'] = form
+#     return render(request, 'enroll_student.html', context)
 
 def enroll_students_in_course(request, course_id):
 
@@ -1020,14 +1120,19 @@ def enroll_students_in_course(request, course_id):
                         current_date = start_date
                         while current_date <= end_date:
                             if current_date.strftime('%A') == schedule_lesson.day:
-                                attendance = Attendance.objects.create(date=current_date, lesson=schedule_lesson)
+                                try:
+                                    attendance = Attendance.objects.get(date=current_date, lesson=schedule_lesson)
+                                except ObjectDoesNotExist:
+                                    attendance = Attendance.objects.create(date=current_date, lesson=schedule_lesson)
+
 
                                 eligible_students = Enrollment.objects.filter(course=course, semester=current_semester).values_list('student_id', flat=True)
                                 for student_id in eligible_students:
                                     StudentAttendance.objects.create(attendance=attendance, student_id=student_id)
 
                             current_date += timedelta(days=1)
-                # create response or redirect
+
+                    return redirect('home-page')              # create response or redirect
 
             else:
                 raise ValidationError("No schedule found for the course.")
@@ -1206,18 +1311,73 @@ def student_attendance(request, *args, **kwargs):
     print(data)
 
     fingerprint_data = data['fingerprint_data']
+    venue = data['venue']
 
-    student = StudentProfile.objects.get(fingerprint_data=fingerprint_data)
 
-    if student:
-        print("success")
-        return Response({"message": "Attendance Taken"})
+    ####sure
+    try:
+        print("trying")
+        # Check if the fingerprint exists in StudentProfile
+        student = StudentProfile.objects.get(fingerprint_data=fingerprint_data)
+        print(student.id)
+        print("got")
+
+        # Get the current time
+        current_time = timezone.localtime(timezone.now())
+        print(current_time)
+
+        # Get the current day eg Monday
+        current_day = current_time.strftime("%A")
+        print(current_day)
+
+        # Get the schedule for the current day, course, and venue
+        schedule = Schedule.objects.filter(day=current_day, start_time__lte=current_time.time(), end_time__gte=current_time.time(), venue__name=venue).first()
+        print(current_time.time())
+
+
+
+        if schedule:
+            # Check if the student is enrolled in the course of that particula schedule
+            enrollment = Enrollment.objects.filter(student=student, course=schedule.course).first()
+            print('got schedule')
+            if enrollment:
+                # Create or update the attendance record for the student and schedule
+                attendance = Attendance.objects.get(date=current_time.date(), lesson=schedule.id)
+                print(attendance.id)
+
+                # Create or update the student's attendance status
+                student_attendance = StudentAttendance.objects.get(attendance=attendance.id, student=student.id)
+                print
+                student_attendance.is_present = True
+                student_attendance.save()
+
+                print("successful")
+
+                return Response({"message": "Attendance Taken"})
+        
+        return Response({"message": "Not Successful"})
+    
+    except StudentProfile.DoesNotExist:
+        print("not successful")
+        return Response({"message": "Student not found"})
+
+
+
+
+    #####sure
+    # if student:
+    #     current_time = timezone.localtime(timezone.now())
+    #     print(current_time)
+
+
+    #     print("success")
+    #     return Response({"message": "Attendance Taken"})
         
 
 
 
-    else:
-        return Response("not successful")
+    # else:
+    #     return Response("not successful")
 
         
     # student = StudentProfile.objects.get(fingerprint_data = fingerprint_data)
@@ -1278,6 +1438,9 @@ def course_attendance(request, course_id):
         # No schedules found for the course
         return render(request, 'no_schedule.html', {'course': course})
     
+    current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+
+    
     current_date = timezone.now().date()
     students = StudentProfile.objects.filter(enrollment__course=course).distinct()
     attendances = Attendance.objects.filter(lesson__in=schedules, date__lte=current_date)
@@ -1293,11 +1456,26 @@ def course_attendance(request, course_id):
     for student_attendance in student_attendances:
         attendance_dict.setdefault(student_attendance.student, {})[student_attendance.attendance] = student_attendance.is_present
 
+    for student in students:
+        present_count = sum(1 for attendance in attendances if attendance_dict.get(student, {}).get(attendance))
+        student.total_lessons = attendances.count()
+        student.present_lessons = present_count
+        student.percentage = (present_count / attendances.count()) * 100 if attendances.count() > 0 else 0
+
+    for student in students:
+        if student.percentage >= 75:
+            student.remarks = 'Good'
+        else:
+            student.remarks = 'Poor'
+
     context = {
         'course': course,
         'students': students,
         'attendances': attendances,
-        'attendance_dict': attendance_dict
+        'attendance_dict': attendance_dict,
+        'current_semester': current_semester,
+        'total_lessons': attendances.count(),
+
     }
 
     return render(request, 'course_attendance.html', context)

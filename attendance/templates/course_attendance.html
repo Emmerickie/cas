@@ -1,15 +1,29 @@
 {% extends 'base.html' %}{% load static %} {% load custom_filters %} {% block pageContent %}
+
+
+
 <link rel="stylesheet" href="{% static 'assets/default/css/style.css' %}">
 <link rel="stylesheet" type="text/css" href="slick.css"/>
 <link rel="stylesheet" type="text/css" href="slick-theme.css"/>
 <script type="text/javascript" src="{% static 'assets/default/js/script.js' %}"></script>
+
+<style>
+    .student-id-column {
+        width: 100%;
+    }
+    
+    
+    .student-name-column {
+        width: 100%;
+    }
+</style>
 
 
 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
     <div class="card card-default rounded-0 shadow ">
         <div class="card-header">
             <div class="d-flex w-100 align-items-center justify-content-between">
-                <h4 class="card-title fw-bold">{{course.course_id}} Attendance Management</h4>
+                <h4 class="card-title fw-bold">{{course.course_id}} Attendance</h4>
                 <div class="tools">
                 </div>
             </div>
@@ -20,7 +34,7 @@
                 <!-- <input type="hidden" name="classIns" value="{{ class.pk }}"> -->
                 <div class="container-fluid">
                     <fieldset>
-                        <legend>Class Details</legend>
+                        <legend>Course Details</legend>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="d-flex w-100">
@@ -32,9 +46,9 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="d-flex w-100">
-                                    <div class="col-auto pe-2 text-muted">Academic Year:</div>
+                                    <div class="col-auto pe-2 text-muted">Academic Year: </div>
                                     <div class="col-auto flex-shrink-1 flex-grow-1">
-                                        <!-- <p class="m-0 fw-bold">{{ class.school_year }}</p> -->
+                                        <p class="m-0 fw-bold">{{current_semester.academic_year}}</p>
                                     </div>
                                 </div>
                             </div>
@@ -48,9 +62,9 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="d-flex w-100">
-                                    <div class="col-auto pe-2 text-muted">Semester:</div>
+                                    <div class="col-auto pe-2 text-muted">Semester: {{current_semester.semester.get_type_display}}</div>
                                     <div class="col-auto flex-shrink-1 flex-grow-1">
-                                        <!-- <p class="m-0 fw-bold">{{ course.name }}</p> -->
+                                        <p class="m-0 fw-bold"> {{ current_semester.get_semester_display }} </p>
                                     </div>
                                 </div>
                             </div>
@@ -66,33 +80,23 @@
                     </fieldset>
                     <hr>
                     <fieldset>
-                        <legend>Date of Class</legend>
+                        <!-- <legend>Date of Class</legend>
                         <div class="row">
                             <div class="col-lg-4 col-md-6 col-sm-12">
                                 <input type="date" name="attendance_date" value="{% if date %}{{ date }}{% endif %}" class="form-control form-control-lg rounded-0" required>
                             </div>
-                        </div>
+                        </div> -->
                     </fieldset>
                     <br>
                     <fieldset>
                         <legend>Attendance List</legend>
                         <div class="table-container slider">
                             <table class="table tables-bordered table-container" id="student-list">
-                                <!-- <colgroup>
-                                    <col width="5%">
-                                    <col width="70%">
-                                    <col width="30%">
-                                    <col width="10">
-                                    <col width="20%">
-                                    <col width="10%">
-                                    <col width="10%">
-
-                                </colgroup> -->
                                 <thead>
                                     <tr>
                                         <th class="text-ceter">#</th>
-                                        <th class="text-ceter" style="width: 200px;">Student ID</th>
-                                        <th class="text-ceter">Student Name</th>
+                                        <th class="text-center student-id-column" style="width: 200px; padding-right: 100px">Student ID</th>
+                                        <th class="text-center student-name-column" style="width: 300px; padding-right: 100px">Student Name</th>
                                         <th class="text-ceter">Programme</th>
                                         {% for attendance in attendances|dictsort_by_date %}
                                             <th class="attendance-date-column">{{ attendance.date }}</th>
@@ -105,8 +109,8 @@
                                     {% for student in students %}
                                     <tr class="">
                                         <td class="text-center">{{ forloop.counter }}</td>
-                                        <td style="width: 200px;">{{ student.student_id }}</td>
-                                        <td>{{ student.last_name }}, {{ student.first_name }} {{ student.middle_name }}</td>
+                                        <td class="student-id-column;">{{ student.student_id }}</td>
+                                        <td class="student-name-column ">{{ student.last_name }}, {{ student.first_name }} {{ student.middle_name }}</td>
                                         <td>{{ student.programme }}</td>
                                         {% for attendance in attendances|dictsort:"date" %}
                                             <td class="text-center attendance-date-column" >
@@ -124,8 +128,10 @@
                         
                                         {% endfor %}
                                         <td class="text-center">
-                                            <!-- <input type="radio" class="btn-check" name="type[{{ student.data.pk }}]" value="3" id="btnradio-3-{{ student.data.pk }}" {% if student.type == '3' %} checked="checked" {% endif %} autocomplete="off">
-                                            <label class="btn btn-outline-danger btn-sm px-1 py-0" for="btnradio-3-{{ student.data.pk }}"><i class="fa fa-check text-light"></label> -->
+                                            {{student.present_lessons}}/{{total_lessons}}
+                                        </td>
+                                        <td class="text-center">
+                                            {{student.percentage|floatformat:2}}%
                                         </td>
                                     </tr>
                                     {% endfor %}

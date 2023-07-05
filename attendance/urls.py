@@ -17,6 +17,19 @@ urlpatterns = [
     path('student-register', views.registerStudent, name="register-student"),
     path('register_fingerprint', views.registerFingerprint, name="register-fingerprint"),
     path('register_lecturer_fingerprint', views.registerFingerprintLecturer, name="register-lecturer-fingerprint"),
+
+    #student
+    path('student',views.student,name='student-page'),
+
+
+
+    #attendances
+    path('view_course_attendances',views.view_course_attendances,name='view-course-attendances'),
+    path('course/<str:course_id>/attendance',views.course_attendance,name='course-attendance'),
+
+
+     
+
     
     path('logout',views.logoutuser,name='logout'),
     path('profile',views.profile,name='profile'),
@@ -28,7 +41,7 @@ urlpatterns = [
     path(r'manage_department/<int:pk>',views.manage_department,name='edit-department-modal'),
     path('save_department',views.save_department,name='save-department'),
     path('delete_department',views.delete_department,name='delete-department'),
-    path('course',views.course,name='course-page'),
+    path('courses',views.courses,name='all-courses-page'),
     path('manage_course',views.manage_course,name='manage-course-modal'),
     path(r'manage_course/<int:pk>',views.manage_course,name='edit-course-modal'),
     path('save_course',views.save_course,name='save-course'),
@@ -43,7 +56,7 @@ urlpatterns = [
     path('save_lecturer',views.save_faculty,name='save-lecturer'),
     path('delete_lecturer/<str:pk>',views.delete_lecturer,name='delete-lecturer'),
 
-    path('class',views.classPage,name='class-page'),
+    path('programmes',views.programmes,name='programmes-page'),
     path('manage_class',views.manage_class,name='manage-class-modal'),
     path(r'manage_class/<int:pk>',views.manage_class,name='edit-class-modal'),
     path(r'manage_class_student/<int:classPK>',views.manage_class_student,name='class-student-modal'),
@@ -52,7 +65,6 @@ urlpatterns = [
     path('save_class',views.save_class,name='save-class'),
     path('delete_class',views.delete_class,name='delete-class'),
     path('delete_class_student',views.delete_class_student,name='delete-class-student'),
-    path('student',views.student,name='student-page'),
     path('manage_student',views.manage_student,name='manage-student-modal'),
     path(r'view_student/<int:pk>',views.view_student,name='view-student-modal'),
     path(r'manage_student/<int:pk>',views.manage_student,name='edit-student-modal'),
@@ -62,7 +74,7 @@ urlpatterns = [
     # path(r'attendance/<int:classPK>',views.attendance,name='attendance-page'),
     # path(r'attendance/<int:classPK>/<str:date>',views.attendance,name='attendance-page-date'),
     # path('save_attendance',views.save_attendance,name='save-attendance'),
-    path('enroll_student',views.enroll_student,name='enroll-student'),
+    # path('enroll_student',views.enroll_student,name='enroll-student'),
 
     # schedules
     path('view_course_schedule/', views.view_course_schedule, name='view-course-schedule'),
@@ -72,13 +84,12 @@ urlpatterns = [
     
     path('add_schedule/', views.add_schedule, name='add-schedule'),
     path('lecturer/timetable/', views.lecturer_timetable, name='lecturer_timetable'),
-    path('lecturer/<str:pk>/courses',views.lecturer_courses,name='courses-page'),
+    path('lecturer/<str:pk>/courses',views.lecturer_courses,name='lecturer-courses-page'),
     path('lecturer/<str:pk>/add_lecturing_course',views.add_lecturing_course,name='add-lecturing-course'),
     
     path('academic_year/new/', views.new_academic_year, name='new-academic-year'),
     path('course/<str:course_id>/', views.course_details, name='course-details'),
     path('course/<str:course_id>/enroll_students',views.enroll_students_in_course,name='enroll-students'),
-    path('course/<str:course_id>/attendance',views.course_attendance,name='course-atteendance'),
     
 
     # path("add-teaching/", views.add_teaching, name="add-teaching"),

@@ -4,9 +4,12 @@
         <div class="card-header">
             <div class="d-flex w-100 align-items-center justify-content-between">
                 <h4 class="card-title fw-bold">{{ course.course_id}}'s Schedule</h4>
+                {% if user.profile.user_type == 1 %}
+
                 <div class="tools">
                     <button type="button" class="btn btn-primary rounded-0 bg-gradient btn-sm" id='add_new'><a href="{% url 'add-schedule' course.course_id %}" style="color: white;"><i class="fa fa-plus"></i><span>Add schedule</span></a></button>
                 </div>
+                {% endif %}
             </div>
         </div>
         <div class="card-body">
@@ -35,8 +38,8 @@
                     <tr>
                         <td class="px-2 py-1 align-middle">{{ schedule.day }}</td>
                         <td class="px-2 py-1 align-middle">{{ schedule.course }}</td> 
-                        <td class="px-2 py-1 align-middle">{{ schedule.start_time }}</td>
-                        <td class="px-2 py-1 align-middle">{{ schedule.end_time }}</td>
+                        <td class="px-2 py-1 align-middle">{{ schedule.start_time|time:"H:i" }}</td>
+                        <td class="px-2 py-1 align-middle">{{ schedule.end_time|time:"H:i" }}</td>
                         <td class="px-2 py-1 align-middle">{{ schedule.get_type_display }}</td>
                         <td class="px-2 py-1 align-middle">{{ schedule.venue }}</td>
                     </tr>
