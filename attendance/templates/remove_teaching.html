@@ -1,0 +1,26 @@
+{% extends 'base.html' %} {% block pageContent %}
+<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    <div class="card card-default rounded-0 shadow ">
+        <div class="card-header">
+            <div class="d-flex w-100 align-items-center justify-content-between">
+                <h4 class="card-title fw-bold">{{delete_item}}</h4>
+
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="container-fluid">
+                <p>Are you sure you want to delete {{item_type}} "{{item.course}}"</p>
+
+                <form action="{% url 'remove-teaching' item.id%}" method="POST">
+                    {% csrf_token %}
+                    <a class="btn btn-info" href="{% url 'lecturer-courses-page' item.lecturer.id %}">Cancel</a>
+
+                    <button class="btn btn-danger" type="submit" name="confirm">Confirm</button>
+
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock pageContent %}

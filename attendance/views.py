@@ -70,7 +70,7 @@ def home(request):
         courses = Course.objects.count()
     elif request.user.profile.user_type == 2:
         courses = Teaching.objects.filter(lecturer = request.user.profile).count()
-        students = Enrollment.objects.filter(course__in = Teaching.objects.filter(lecturer = request.user.profile).values_list('id')).count()
+        students = Enrollment.objects.filter(course__in = Teaching.objects.filter(lecturer = request.user.profile).values_list('course')).count()
     
     else:
         courses = Enrollment.objects.filter(student = request.user.student).count()
@@ -91,8 +91,8 @@ def registerUser(request):
     department = Department.objects.filter(status=1).all()
 
     user = request.user
-    if user.is_authenticated:
-        return redirect('home-page')
+    # if user.is_authenticated:
+    #     return redirect('home-page')
     context['page_title'] = "Register Instructor"
     if request.method == 'POST':
         data = request.POST
@@ -525,7 +525,8 @@ def course_details(request, course_id):
         'current_semester': current_semester,
         'programmes': programmes,
         'lecturers': lecturers,
-        'students':students
+        'students':students,
+        'current_semester': current_semester
     }
     
     return render(request, 'course_details.html', context)
@@ -884,24 +885,41 @@ def save_faculty(request):
 def delete_lecturer(request, pk):
     lecturer = get_object_or_404(User, pk=pk)
 
-
-    resp={'status' : 'failed', 'msg':''}
-    if request.method == 'POST':
-        id = request.POST['id']
-        try:
-            lecturer = User.objects.filter(id = id).first()
-            lecturer.delete()
-            resp['status'] = 'success'
-            messages.success(request,'Lecturer has been deleted successfully.')
-            return redirect('lecturers-page')
-        except Exception as e:
-            raise print(e)
+    resp = {'status': 'failed', 'msg': ''}
+    if request.method == 'POST':  
+        lecturer = User.objects.filter(id=pk).first()
+        lecturer.delete()
+        resp['status'] = 'success'
+        messages.success(request, 'Lecturer has been deleted successfully.')
+        return redirect('lecturers-page')
     
-    context = {'delete_item' : "Delete Lecturer",
-                'item_type' : "lecturer",
-                'item' : lecturer
-                }
+    context = {
+        'delete_item': "Delete Lecturer",
+        'item_type': "lecturer",
+        'item': lecturer
+    }
     return render(request, 'delete.html', context)
+
+@login_required
+def remove_teaching(request, pk):
+    teaching = get_object_or_404(Teaching, pk=pk)
+    course = teaching.course
+
+    resp = {'status': 'failed', 'msg': ''}
+    if request.method == 'POST':  
+        teaching = Teaching.objects.filter(id=pk).first()
+        teaching.delete()
+        success_message = f"The course {course} was removed successfully"
+        resp['status'] = 'success'
+        messages.success(request, success_message)
+        return redirect('lecturer-courses-page', teaching.lecturer.id)
+    
+    context = {
+        'delete_item': "Remove course",
+        'item_type': "Course",
+        'item': teaching
+    }
+    return render(request, 'remove_teaching.html', context)
 
 
     

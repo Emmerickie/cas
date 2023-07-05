@@ -52,9 +52,9 @@
                                     <i class="fa fa-eye"></i>
                                 </a>
 
-                                <button class="btn btn-outline-danger btn-sm delete-data" type="button" data-id="{{ course.pk }}" title="Delete">
+                                <a class="btn btn-outline-danger btn-sm delete-data" href="{% url 'remove-teaching' course.id %}" >
                                     <i class="fa fa-trash"></i>
-                                </button>
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}

@@ -51,9 +51,11 @@
                     <li class="nav-item">
                         <a class="nav-link" aria-current="page" href="{% url 'view-course-schedule' %}">Schedules</a>
                     </li>
+                    {% if user.profile.user_type == 1 %}
                     <li class="nav-item">
                         <a class="nav-link" aria-current="page" href="{% url 'student-page' %}">Students</a>
                     </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link" aria-current="page" href="{% url 'view-course-attendances' %}">Attendances</a>
                     </li>

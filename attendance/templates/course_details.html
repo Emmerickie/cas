@@ -23,7 +23,7 @@
                             <div class="d-flex w-100">
                                 <div class="col-auto pe-2 text-muted">Academic Year:</div>
                                 <div class="col-auto flex-shrink-1 flex-grow-1">
-                                    <p class="m-0 fw-bold">{{ course.semester }}</p>
+                                    <p class="m-0 fw-bold">{{current_semester.academic_year}}</p>
                                 </div>
                             </div>
                         </div>
@@ -39,7 +39,7 @@
                             <div class="d-flex w-100">
                                 <div class="col-auto pe-2 text-muted">Semester:</div>
                                 <div class="col-auto flex-shrink-1 flex-grow-1">
-                                    <!-- <p class="m-0 fw-bold">{{ course.name }}</p> -->
+                                    <p class="m-0 fw-bold">{{ current_semester.get_semester_display }}</p>
                                 </div>
                             </div>
                         </div>
@@ -57,32 +57,34 @@
                 <fieldset>
                     <div class="d-flex w-100 align-items-center justify-content-between">
                         <legend style="width: auto;"> Course Instructors</legend>
-                        <div class="tools">
+                        <!-- <div class="tools">
                             <button type="button" class="btn btn-primary rounded-0 bg-gradient btn-sm" id='add_new'><i class="fa fa-plus"></i> Add Instructor</button>
-                        </div>
+                        </div> -->
                     </div>
                     <table class="table tables-bordered" id="student-list">
                         <colgroup>
                             <col width="10%">
                             <col width="90%">
+                            <!-- <col width="10%"> -->
                         </colgroup>
                         <thead>
                             <tr>
                                 <th class="text-ceter">#</th>
                                 <th class="text-ceter">Instructor's Name</th>
-                                <th class="text-ceter">Actions</th>
+                                <th class="text-ceter"></th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for lecturer in lecturers %}
                             <tr class="">
-                                <td class="text-center">{{ forloop.counter }}</td>
+                                <td>{{ forloop.counter }}</td>
                                 <td>{{ lecturer.lecturer.user.first_name }} {{ lecturer.lecturer.user.last_name }}</td>
-                                <td class="text-center">
+                                <!-- <td>{{ lecturer.lecturer.user.department}}</td> -->
+                                <!-- <td class="text-center">
                                     <button class="btn btn-outline-danger btn-sm delete-data" type="button" data-id="{{ student.pk }}" title="Delete">
                                         <i class="fa fa-trash"></i>
                                     </button>
-                                </td>
+                                </td> -->
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -95,17 +97,17 @@
                 <fieldset>
                     <div class="d-flex w-100 align-items-center justify-content-between">
                         <legend style="width: auto;"> Programmes Taking Course</legend>
-                        <div class="tools">
+                        <!-- <div class="tools">
                             <button type="button" class="btn btn-primary rounded-0 bg-gradient btn-sm" id='add_new'><i class="fa fa-plus"></i> Add Programme</button>
-                        </div>
+                        </div> -->
                     </div>
                     <table class="table tables-bordered" id="student-list">
                         <colgroup>
                             <col width="10%">
                             <col width="50%">
                             <col width="20%">
-                            <col width="10%">
-                            <col width="10%">
+                            <col width="20%">
+                            <!-- <col width="10%"> -->
                         </colgroup>
                         <thead>
                             <tr>
@@ -113,7 +115,7 @@
                                 <th class="text-ceter">Programme Name</th>
                                 <th class="text-ceter">Level</th>
                                 <th class="text-ceter">Status</th>
-                                <th class="text-ceter">Actions</th>
+                                <th class="text-ceter"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -122,11 +124,11 @@
                                 <td class="text-center">{{ forloop.counter }}</td>
                                 <td>{{ programme.programme.name }}</td>
                                 <td>{{ programme.get_level_display }}</td>
-                                <td class="text-center">{{ programme.get_status_display }}</td>
+                                <td >{{ programme.get_status_display }}</td>
                                 <td class="text-center">
-                                    <button class="btn btn-outline-danger btn-sm delete-data" type="button" data-id="{{ student.pk }}" title="Delete">
+                                    <!-- <button class="btn btn-outline-danger btn-sm delete-data" type="button" data-id="{{ student.pk }}" title="Delete">
                                         <i class="fa fa-trash"></i>
-                                    </button>
+                                    </button> -->
                                 </td>
                             </tr>
                             {% endfor %}
@@ -141,13 +143,13 @@
                     <div class="d-flex w-100 align-items-center justify-content-between">
                         <legend style="width: auto;"> Student Enrolled List</legend>
                         {% if not students %}
-                        <div class="tools">
+                        <!-- <div class="tools">
                             <button type="button" class="btn btn-primary rounded-0 bg-gradient btn-sm" id='add_new'><a href="{% url 'enroll-students' course.course_id %} " style="color: white;"><i class="fa fa-plus"></i> Enroll Students</a></button>
-                        </div>
+                        </div> -->
                         {% else %}
-                        <div class="tools">
+                        <!-- <div class="tools">
                             <button type="button" class="btn btn-primary rounded-0 bg-gradient btn-sm" id='add_new'><i class="fa fa-plus"></i> Add Student</button>
-                        </div>
+                        </div> -->
                         {% endif %}
 
                     </div>
@@ -170,7 +172,7 @@
                                 <!-- <th class="text-ceter">Total Tardy</th>
                                 <th class="text-ceter">Total Absent</th>
                                 <th class="text-ceter">Total Present</th> -->
-                                <th class="text-ceter">Actions</th>
+                                <th class="text-ceter"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -183,9 +185,9 @@
                                 <td>{{ student.student.get_year_of_study_display }}</td>
                                 <!-- <td class="text-center">{{ student.get_absent|intcomma }}</td> -->
                                 <td class="text-center">
-                                    <button class="btn btn-outline-danger btn-sm delete-data" type="button" data-id="{{ student.pk }}" title="Delete">
+                                    <!-- <button class="btn btn-outline-danger btn-sm delete-data" type="button" data-id="{{ student.pk }}" title="Delete">
                                         <i class="fa fa-trash"></i>
-                                    </button>
+                                    </button> -->
                                 </td>
                             </tr>
                             {% endfor %}

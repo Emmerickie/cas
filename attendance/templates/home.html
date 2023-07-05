@@ -44,7 +44,7 @@
                 <div class="card-body">
                     <div class="d-flex w-100">
                         <div class="col-8 pe-2">
-                            <div class="summary-title fs-5 border-bottom">Total Faculty</div>
+                            <div class="summary-title fs-5 border-bottom">Total Lecturers</div>
                             <div class="summary-count text-end fw-bolder mt-3 px-4">{{ faculty|intcomma }}</div>
                         </div>
                         <div class="col-4">
@@ -57,14 +57,31 @@
             </div>
         </div>
         {% endif %}
+        <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
+            <div class="card rounded-0 shadow border-info text-start summary-card my-3">
+                <div class="card-body">
+                    <div class="d-flex w-100">
+                        <div class="col-8 pe-2">
+                            <div class="summary-title fs-5 border-bottom">Total Courses</div>
+                            <div class="summary-count text-end fw-bolder mt-3 px-4">{{ courses|intcomma }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="summary-icon p-3 rounded border text-center  bg-gradient bg-info">
+                                <i class="fa fa-th-list fs-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
             <div class="card rounded-0 shadow border-primary text-start summary-card my-3">
                 <div class="card-body">
                     <div class="d-flex w-100">
                         <div class="col-8 pe-2">
-                            <div class="summary-title fs-5 border-bottom">Total Classes</div>
-                            <div class="summary-count text-end fw-bolder mt-3 px-4">{{ classes|intcomma }}</div>
+                            <div class="summary-title fs-5 border-bottom">Total Programmes</div>
+                            <div class="summary-count text-end fw-bolder mt-3 px-4">{{ programme|intcomma }}</div>
                         </div>
                         <div class="col-4">
                             <div class="summary-icon p-3 rounded border text-center  bg-gradient bg-primary text-light">
@@ -94,6 +111,8 @@
             </div>
         </div>
     </div>
+    
+    
 
 </section>
 

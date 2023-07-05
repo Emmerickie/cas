@@ -57,6 +57,10 @@ urlpatterns = [
     path('save_lecturer',views.save_faculty,name='save-lecturer'),
     path('delete_lecturer/<str:pk>',views.delete_lecturer,name='delete-lecturer'),
 
+
+    #delete / remove a teaching course
+    path('remove_course/<str:pk>',views.remove_teaching,name='remove-teaching'),
+
     path('programmes',views.programmes,name='programmes-page'),
     path('manage_class',views.manage_class,name='manage-class-modal'),
     path(r'manage_class/<int:pk>',views.manage_class,name='edit-class-modal'),
