@@ -48,7 +48,7 @@
                                 <span class="badge bg-secondary rounded-pill px-3">Inactive</span> {% endif %}
                             </td>
                             <td class="px-2 py-1 align-middle text-center">
-                                <a class="btn btn-outline-info btn-sm view-data" href="javascript:void(0)" data-url="" title="View Details">
+                                <a class="btn btn-outline-info btn-sm view-data" href="{% url 'course-details' course.course.course_id %}" >
                                     <i class="fa fa-eye"></i>
                                 </a>
 

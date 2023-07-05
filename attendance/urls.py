@@ -26,6 +26,7 @@ urlpatterns = [
     #attendances
     path('view_course_attendances',views.view_course_attendances,name='view-course-attendances'),
     path('course/<str:course_id>/attendance',views.course_attendance,name='course-attendance'),
+    path('course/<str:course_id>/attendance/summary',views.course_attendance_summary,name='course-attendance-summary'),
 
 
      
@@ -86,6 +87,9 @@ urlpatterns = [
     path('lecturer/timetable/', views.lecturer_timetable, name='lecturer_timetable'),
     path('lecturer/<str:pk>/courses',views.lecturer_courses,name='lecturer-courses-page'),
     path('lecturer/<str:pk>/add_lecturing_course',views.add_lecturing_course,name='add-lecturing-course'),
+
+
+    #academic year
     
     path('academic_year/new/', views.new_academic_year, name='new-academic-year'),
     path('course/<str:course_id>/', views.course_details, name='course-details'),

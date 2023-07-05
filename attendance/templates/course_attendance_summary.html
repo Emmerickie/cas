@@ -25,7 +25,7 @@
             <div class="d-flex w-100 align-items-center justify-content-between">
                 <h4 class="card-title fw-bold">{{course.course_id}} Attendance</h4>
                 <div class="tools">
-                    <button type="button" class="btn btn-defualt border rounded-0 bg-gradient btn-sm" id='print_attendance_report'><a href="{% url 'course-attendance-summary' course.course_id %}" target="_blank"><i class="fa fa-print"></i> Print Attendance Report</a></button>
+                    <button type="button" class="btn btn-defualt border rounded-0 bg-gradient btn-sm" id='print_attendance_report'><i class="fa fa-print"></i> Print Attendance Report</button>
                 </div>
             </div>
         </div>
@@ -96,24 +96,25 @@
                                 <thead>
                                     <tr>
                                         <th class="text-ceter">#</th>
-                                        <th class="text-center student-id-column" style="width: 200px; padding-right: 100px">Student ID</th>
-                                        <th class="text-center student-name-column" style="width: 300px; padding-right: 100px">Student Name</th>
+                                        <th class="text-center">Student ID</th>
+                                        <th class="text-center">Student Name</th>
                                         <th class="text-ceter">Programme</th>
-                                        {% for attendance in attendances|dictsort_by_date %}
+                                        <!-- {% for attendance in attendances|dictsort_by_date %}
                                             <th class="attendance-date-column">{{ attendance.date }}</th>
-                                        {% endfor %}
+                                        {% endfor %} -->
                                         <th class="text-ceter">Present/Total</th>
                                         <th class="text-ceter">% Presence </th>
+                                        <th class="text-ceter">Remarks </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for student in students %}
                                     <tr class="">
                                         <td class="text-center">{{ forloop.counter }}</td>
-                                        <td class="student-id-column;">{{ student.student_id }}</td>
-                                        <td class="student-name-column ">{{ student.last_name }}, {{ student.first_name }} {{ student.middle_name }}</td>
+                                        <td>{{ student.student_id }}</td>
+                                        <td>{{ student.last_name }}, {{ student.first_name }} {{ student.middle_name }}</td>
                                         <td>{{ student.programme }}</td>
-                                        {% for attendance in attendances|dictsort:"date" %}
+                                        <!-- {% for attendance in attendances|dictsort:"date" %}
                                             <td class="text-center attendance-date-column" >
                                                 {% if attendance_dict|get:student and attendance_dict|get:student|get:attendance %}
                                                     {% if attendance_dict|get:student|get:attendance %}
@@ -127,12 +128,15 @@
                                             </td>
                                 
                         
-                                        {% endfor %}
+                                        {% endfor %} -->
                                         <td class="text-center">
                                             {{student.present_lessons}}/{{total_lessons}}
                                         </td>
                                         <td class="text-center">
                                             {{student.percentage|floatformat:2}}%
+                                        </td>
+                                        <td class="text-center">
+                                            {{student.remarks}}
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -140,8 +144,8 @@
                             </table>
                         </div>
 
-                        <div class="clear-fix py-3"></div>
-                        <!-- <center>
+                        <!-- <div class="clear-fix py-3"></div>
+                        <center>
                             <button class="btn btn-sm btn-primary rounded-0 bg-gradient"><i class="fa fa-save"></i> Save</button>
                         </center> -->
                     </fieldset>

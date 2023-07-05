@@ -624,33 +624,75 @@ def add_schedule(request, course_id):
             print(form.data)
             courseSchedule.save()
 
-            
-
-            schedule= Schedule.objects.filter(course=course).last()
-
             current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+
+            
+            eligible_programmes = ProgrammeCourse.objects.filter(course=course, semester=current_semester.semester, status='C')
+            if eligible_programmes.exists():
+                for eligible_programme in eligible_programmes:
+                    level = eligible_programme.level
+                    # Enroll students who have the course as a core, matching level, status as Continuing, and program status as Core
+                    students = StudentProfile.objects.filter(programme=eligible_programme.programme, year_of_study=level, status='Continuing')
+                    
+                    for student in students:
+                        # Enroll the student in the course for the current semester
+                        enrollment, created = Enrollment.objects.get_or_create(student=student, course=course, semester=current_semester)
+
+                        # initialize the attendance which may we should put it to when schedule is created or modified
+                    current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+                    course = get_object_or_404(Course, course_id=course_id)
+
+
+                    schedule_lessons = Schedule.objects.filter(course=course)
+
+                    if schedule_lessons.exists():
+                        for schedule_lesson in schedule_lessons:
+                            start_date = current_semester.start_date
+                            end_date = current_semester.end_date
+
+                            if start_date <= end_date:
+                                current_date = start_date
+                                while current_date <= end_date:
+                                    if current_date.strftime('%A') == schedule_lesson.day:
+                                        try:
+                                            attendance = Attendance.objects.get(date=current_date, lesson=schedule_lesson)
+                                        except ObjectDoesNotExist:
+                                            attendance = Attendance.objects.create(date=current_date, lesson=schedule_lesson)
+
+
+                                        eligible_students = Enrollment.objects.filter(course=course, semester=current_semester).values_list('student_id', flat=True)
+                                        for student_id in eligible_students:
+                                            student_attendance, created = StudentAttendance.objects.get_or_create(attendance=attendance, student_id=student_id)
+
+                                    current_date += timedelta(days=1)            
+            
+            #####that kind of worked
+            # schedule= Schedule.objects.filter(course=course).last()
+
+            # current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
             
 
-            course_lecturers = Teaching.objects.filter(course=course)
+            # course_lecturers = Teaching.objects.filter(course=course)
 
-            for course_lecturer in course_lecturers:
+
+            # for course_lecturer in course_lecturers:
 
                 
-                start_date = current_semester.start_date
-                end_date = current_semester.end_date
+            #     start_date = current_semester.start_date
+            #     end_date = current_semester.end_date
 
-                if start_date <= end_date:
-                    current_date = start_date
-                    while current_date <= end_date:
-                        if current_date.strftime('%A') == schedule.day:
-                            try:
-                                attendance = Attendance.objects.get(date=current_date, lesson=schedule)
-                            except ObjectDoesNotExist:
-                                attendance = Attendance.objects.create(date=current_date, lesson=schedule)
+            #     if start_date <= end_date:
+            #         current_date = start_date
+            #         while current_date <= end_date:
+            #             if current_date.strftime('%A') == schedule.day:
+            #                 try:
+            #                     attendance = Attendance.objects.get(date=current_date, lesson=schedule)
+            #                 except ObjectDoesNotExist:
+            #                     attendance = Attendance.objects.create(date=current_date, lesson=schedule)
 
-                            InstructorAttendance.objects.get_or_create(attendance=attendance, lecturer=course_lecturer.lecturer)
-                        current_date += timedelta(days=1)
-
+            #                 InstructorAttendance.objects.get_or_create(attendance=attendance, lecturer=course_lecturer.lecturer)
+            #             current_date += timedelta(days=1)
+            #####that kind of worked
                 
         ####for students
             # eligible_programmes = ProgrammeCourse.objects.filter(course=course, semester=current_semester.semester, status='C')
@@ -1007,30 +1049,30 @@ def add_lecturing_course(request, pk):
     if request.method == 'POST':
         course_id = request.POST['course_id']
         course = Course.objects.get(id=course_id)
-        course_lecturer, created = Teaching.objects.get_or_create(lecturer=lecturer, course=course.id)
+        course_lecturer, created = Teaching.objects.get_or_create(lecturer=lecturer, course=course)
         
 
         # create attendances for the new course to be taught by the lecturer
-        schedules = Schedule.objects.filter(course=course.id)
+        # schedules = Schedule.objects.filter(course=course.id)
 
-        current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+        # current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
         
 
-        for schedule in schedules:
-            # course_lecturers = Teaching.objects.filter(course=course.id)
+        # for schedule in schedules:
+        #     # course_lecturers = Teaching.objects.filter(course=course.id)
 
                 
-                start_date = current_semester.start_date
-                end_date = current_semester.end_date
+        #         start_date = current_semester.start_date
+        #         end_date = current_semester.end_date
 
-                if start_date <= end_date:
-                    current_date = start_date
-                    while current_date <= end_date:
-                        if current_date.strftime('%A') == schedule.day:
-                            attendance, created = Attendance.objects.get_or_create(date=current_date, lesson=schedule)
+        #         if start_date <= end_date:
+        #             current_date = start_date
+        #             while current_date <= end_date:
+        #                 if current_date.strftime('%A') == schedule.day:
+        #                     attendance, created = Attendance.objects.get_or_create(date=current_date, lesson=schedule)
 
-                            InstructorAttendance.objects.get_or_create(attendance=attendance, lecturer=course_lecturer.lecturer)
-                        current_date += timedelta(days=1)
+        #                     InstructorAttendance.objects.get_or_create(attendance=attendance, lecturer=course_lecturer.lecturer)
+        #                 current_date += timedelta(days=1)
 
         return redirect('lecturer-courses-page', pk=lecturer.id)
     
@@ -1479,6 +1521,60 @@ def course_attendance(request, course_id):
     }
 
     return render(request, 'course_attendance.html', context)
+
+
+def course_attendance_summary(request, course_id):
+    course = get_object_or_404(Course, course_id=course_id)
+    schedules = Schedule.objects.filter(course=course)
+
+
+
+    if len(schedules) == 0:
+        # No schedules found for the course
+        return render(request, 'no_schedule.html', {'course': course})
+    
+    current_semester = Semester.objects.filter(start_date__lte=date.today(), end_date__gte=date.today()).first()
+
+    
+    current_date = timezone.now().date()
+    students = StudentProfile.objects.filter(enrollment__course=course).distinct()
+    attendances = Attendance.objects.filter(lesson__in=schedules, date__lte=current_date)
+
+    # Fetch student attendances for the given course and attendance dates
+    student_attendances = StudentAttendance.objects.filter(
+        attendance__in=attendances,
+        student__in=students
+    )
+
+    # Create a dictionary to store student attendances indexed by student and attendance date
+    attendance_dict = {}
+    for student_attendance in student_attendances:
+        attendance_dict.setdefault(student_attendance.student, {})[student_attendance.attendance] = student_attendance.is_present
+
+    for student in students:
+        present_count = sum(1 for attendance in attendances if attendance_dict.get(student, {}).get(attendance))
+        student.total_lessons = attendances.count()
+        student.present_lessons = present_count
+        student.percentage = (present_count / attendances.count()) * 100 if attendances.count() > 0 else 0
+
+    for student in students:
+        if student.percentage >= 75:
+            student.remarks = 'Good Attendance'
+        else:
+            student.remarks = 'Poor Attendance'
+
+    context = {
+        'course': course,
+        'students': students,
+        'attendances': attendances,
+        'attendance_dict': attendance_dict,
+        'current_semester': current_semester,
+        'total_lessons': attendances.count(),
+
+    }
+
+    return render(request, 'course_attendance_summary.html', context)
+
 
     # Retrieve the current date and time from today above
     # current_time = today.time()
