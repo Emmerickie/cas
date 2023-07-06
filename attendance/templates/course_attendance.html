@@ -114,17 +114,22 @@
                                         <td class="student-name-column ">{{ student.last_name }}, {{ student.first_name }} {{ student.middle_name }}</td>
                                         <td>{{ student.programme }}</td>
                                         {% for attendance in attendances|dictsort:"date" %}
-                                            <td class="text-center attendance-date-column" >
+                                            
                                                 {% if attendance_dict|get:student and attendance_dict|get:student|get:attendance %}
                                                     {% if attendance_dict|get:student|get:attendance %}
-                                                        Present
+                                                        <td class="text-center attendance-date-column" style="color: green;">
+                                                            <span>Present</span>
+                                                        </td>
                                                     {% else %}
-                                                        Absent
+                                                        <td class="text-center attendance-date-column" style="color: rgb(255, 60, 0);" >
+                                                            <span>Absent</span>
+                                                        </td>
                                                     {% endif %}
                                                 {% else %}
-                                                    Absent
+                                                <td class="text-center attendance-date-column" style="color: rgb(255, 60, 0);" >
+                                                    <span>Absent</span>
+                                                </td>
                                                 {% endif %}
-                                            </td>
                                 
                         
                                         {% endfor %}

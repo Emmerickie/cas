@@ -293,7 +293,7 @@ def registerFingerprintLecturer(request, *args, **kwargs):
 
 
 
-    endpoint = "http://localhost:8001/api/"
+    endpoint = "http://172.20.10.3:8000/api/"
 
     get_response = requests.get(endpoint)
 
@@ -347,8 +347,12 @@ def registerFingerprintLecturer(request, *args, **kwargs):
 
     # Clear the session data
     del request.session['user_info']
+    lecturer = lecturer.username
+    success_message = f"The student {lecturer} was added successfully"
+    messages.success(request, success_message)
+    return redirect('lecturers-page')
 
-    return redirect('home-page')
+
 
 
 
